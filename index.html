@@ -12,8 +12,7 @@
         
         body {
             font-family: 'Outfit', sans-serif;
-            /* Eliminamos el fondo fijo e introducimos el motor de colores animados */
-            background-color: #064e3b; /* Inicia en Verde Oscuro */
+            background-color: #064e3b; 
             animation: bgColorChange 105s infinite ease-in-out;
             color: #f8fafc;
             min-height: 100vh;
@@ -24,43 +23,39 @@
             position: relative;
         }
 
-        /* Capa de difuminado Negro que se mezcla y mueve con los colores */
+        /* OPTIMIZACIÓN: Se agrandó el pseudo-elemento y se anima con transform (GPU) en lugar de background-position (CPU) */
         body::before {
             content: '';
             position: fixed;
-            inset: 0;
+            top: -50%; left: -50%; width: 200%; height: 200%;
             z-index: -1;
-            background: linear-gradient(135deg, transparent 15%, #000000 95%);
-            background-size: 200% 200%;
-            animation: gradientMove 20s infinite alternate ease-in-out;
-            pointer-events: none; /* Evita que bloquee los clics del juego */
+            background: linear-gradient(135deg, transparent 30%, #000000 80%);
+            animation: gradientTransform 20s infinite alternate ease-in-out;
+            pointer-events: none; 
         }
 
-        /* Animación de los 7 Colores Oscuros (15 Segundos cada uno = 105s total) */
         @keyframes bgColorChange {
-            0%, 100% { background-color: #064e3b; } /* Verde Oscuro */
-            14.2% { background-color: #7f1d1d; }    /* Rojo Oscuro */
-            28.5% { background-color: #4c1d95; }    /* Morado/Lila Oscuro */
-            42.8% { background-color: #854d0e; }    /* Amarillo Oscuro */
-            57.1% { background-color: #86198f; }    /* Fucsia Oscuro */
-            71.4% { background-color: #9a3412; }    /* Naranja Oscuro */
-            85.7% { background-color: #1e3a8a; }    /* Azul Oscuro */
+            0%, 100% { background-color: #064e3b; } 
+            14.2% { background-color: #7f1d1d; }    
+            28.5% { background-color: #4c1d95; }    
+            42.8% { background-color: #854d0e; }    
+            57.1% { background-color: #86198f; }    
+            71.4% { background-color: #9a3412; }    
+            85.7% { background-color: #1e3a8a; }    
         }
 
-        /* Animación del difuminado para dar sensación de volumen */
-        @keyframes gradientMove {
-            0% { background-position: 0% 0%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 100%; }
+        /* Animación suave acelerada por hardware */
+        @keyframes gradientTransform {
+            0% { transform: translate(-10%, -10%); }
+            100% { transform: translate(10%, 10%); }
         }
 
         #start-screen {
             position: fixed;
             inset: 0;
             z-index: 200;
-            /* Modificado a semi-transparente para poder ver el fondo animado */
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px); /* Blur optimizado */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -136,7 +131,7 @@
             border: 1px solid rgba(255, 255, 255, 0.07);
             font-weight: 800;
             font-size: clamp(0.75rem, 2vw, 1.2rem);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.5s ease;
         }
         @media (min-width: 768px) {
             .cell { border-radius: 16px; }
@@ -187,7 +182,8 @@
             justify-content: center;
             font-weight: 900;
             color: white;
-            transform-origin: bottom center;
+            transform-origin: center center; /* Optimizado para escala central */
+            will-change: transform; /* Informa a la GPU que esta capa se animará */
         }
 
         .floating-action { position: fixed; z-index: 100; }
@@ -210,7 +206,7 @@
             cursor: pointer;
             box-shadow: 0 8px 15px rgba(0,0,0,0.5);
             border: 3px solid #3b82f6;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, background 0.3s ease;
             font-size: 1.8rem;
         }
         @media (min-width: 768px) {
@@ -223,9 +219,9 @@
         @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .modal-overlay {
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(20px);
-            transition: opacity 0.8s ease, visibility 0.8s ease;
+            background: rgba(0, 0, 0, 0.85); /* Un poco más oscuro */
+            backdrop-filter: blur(8px); /* Reducido de 20px a 8px para mejor rendimiento */
+            transition: opacity 0.5s ease, visibility 0.5s ease; /* Más rápido */
             opacity: 0;
             visibility: hidden;
             display: flex;
@@ -250,7 +246,7 @@
             gap: 8px;
             padding: 6px 16px;
             background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 9999px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
@@ -285,7 +281,6 @@
             to { stroke-dashoffset: -30; }
         }
 
-        /* ESTILOS DEL CONTROLADOR DE RADIO MINIMALISTA */
         .radio-control-wrapper {
             position: fixed;
             bottom: 15px;
@@ -296,7 +291,7 @@
             align-items: center;
             gap: 12px;
             background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(8px);
             padding: 16px 8px;
             border-radius: 50px;
             border: 1px solid rgba(71, 85, 105, 0.5);
@@ -311,7 +306,6 @@
             background: rgba(15, 23, 42, 0.95);
         }
 
-        /* Slider Vertical CSS puro (Cross-browser) */
         .vol-slider-container {
             width: 24px;
             height: 70px;
@@ -321,7 +315,7 @@
         }
         .vol-slider {
             -webkit-appearance: none;
-            width: 70px; /* Al rotar, este es el alto visual */
+            width: 70px;
             height: 4px;
             background: #475569;
             outline: none;
@@ -353,12 +347,10 @@
 
     <!-- CONTROLADOR GLOBAL DE AUDIO Y RADIO (Inferior Derecha) -->
     <div class="radio-control-wrapper group">
-        <!-- Barra de Volumen Vertical (50% por defecto) -->
         <div class="vol-slider-container opacity-60 group-hover:opacity-100 transition-opacity">
             <input type="range" id="volume-slider" class="vol-slider" min="0" max="1" step="0.01" value="0.5" oninput="audioManager.setVolume(this.value)" title="Ajustar Volumen">
         </div>
         
-        <!-- Botón Toggle Minimalista -->
         <div id="audio-toggle-btn" onclick="audioManager.toggleAudio()" class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center text-slate-400 cursor-pointer transition-all hover:scale-105 hover:bg-indigo-600 hover:text-white hover:border-indigo-400 text-sm md:text-lg" title="Activar/Silenciar Radio y Efectos">
             <i id="audio-icon" class="fas fa-volume-mute"></i>
         </div>
@@ -379,7 +371,6 @@
                     <button type="button" onclick="ui.addPlayer()" class="bg-purple-600 hover:bg-purple-500 py-3 md:py-4 px-8 rounded-xl font-black text-base md:text-xl transition-all w-full sm:w-auto">AÑADIR</button>
                 </form>
                 <div id="setup-player-list" class="flex flex-wrap gap-2 md:gap-3 justify-center py-2 min-h-[50px]">
-                    <!-- Listado -->
                 </div>
             </div>
 
@@ -387,7 +378,6 @@
             
             <p id="player-count-info" class="text-xs md:text-sm text-slate-500 mt-4 uppercase font-bold tracking-widest">Participantes: 0 / 10</p>
 
-            <!-- AVISO DE PANTALLA COMPLETA -->
             <div class="mt-6 md:mt-8 inline-flex items-center justify-center gap-2 text-indigo-200 text-sm md:text-lg font-bold bg-indigo-900/40 py-3 px-5 md:px-8 rounded-xl border border-indigo-500/30 w-full sm:w-auto">
                 <i class="fas fa-expand text-lg md:text-xl"></i> Para una mejor experiencia oprimir F11 para pantalla completa
             </div>
@@ -396,12 +386,9 @@
 
     <!-- CONTENEDOR DEL JUEGO -->
     <div id="game-container">
-        
-        <!-- LOGO REDUCIDO EN EL TABLERO (Superior Izquierda) -->
         <div class="fixed top-4 left-4 md:top-6 md:left-6 z-[60] pointer-events-none flex flex-col items-center gap-3">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2GfEBXE21cSNw-Uj2m6vBBFDHn31z4zH5SXJa-UnHEP7j63G98XGkX6K_PfJ1SoLctZvsTYgHf_kRujXn-0SZ_Epl4qEhbyW6_nKmT189FSOEZ2EKV7FKSdEvoUZUK51qJSrvsrmvVrAQRtsgaFo6Gmjp4kzWWpgpC1VJErpCeMtOKxEJan2A1WX3P_VI/s16000/ESCALERA%20400x300.png" alt="Logo Miniatura" class="w-[225px] md:w-[300px] drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]">
             
-            <!-- Reloj de conteo regresivo de turno (Debajo del logo) -->
             <div id="turn-timer-display" class="hidden bg-slate-900/90 border-2 border-red-500/50 rounded-2xl px-5 py-2 shadow-xl backdrop-blur-md transition-all duration-300 pointer-events-auto">
                 <span class="text-red-400 font-black text-sm md:text-base tracking-widest flex items-center gap-2">
                     <i class="fas fa-stopwatch animate-pulse"></i> TIEMPO: <span id="turn-time-left" class="text-xl md:text-2xl font-mono text-white">20</span>s
@@ -409,7 +396,6 @@
             </div>
         </div>
 
-        <!-- BOTÓN DE SALIR (Inferior Izquierda) -->
         <div class="floating-action reset-container flex flex-col items-center gap-2">
             <button onclick="location.reload()" class="action-btn bg-slate-800 text-slate-400 border-slate-700 hover:bg-red-500 hover:text-white transition-colors" title="Salir">
                 <i class="fas fa-sign-out-alt"></i>
@@ -417,7 +403,6 @@
             <span class="text-xs md:text-base font-black text-slate-400 tracking-widest text-blink">SALIR</span>
         </div>
 
-        <!-- BOTÓN DE JUGAR (Superior Derecha) -->
         <div class="floating-action dice-container flex flex-col items-center gap-2">
             <div id="dice-visual" class="action-btn text-blue-600" onclick="game.rollDice()" title="Tirar Dado">
                 <i class="fas fa-dice-d6"></i>
@@ -433,25 +418,20 @@
                 </div>
             </div>
 
-            <!-- Wrapper inteligente: Se ajusta a la altura del dispositivo -->
             <div class="board-wrapper">
-                <div id="game-board" class="board-grid">
-                    <!-- Casillas JS -->
-                </div>
-                <!-- Lienzo de vectores para las flechas de conexión -->
+                <div id="game-board" class="board-grid"></div>
                 <div id="svg-container" class="absolute top-0 left-0 w-full h-full pointer-events-none z-[45]"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Unificado adaptable por altura -->
     <div id="modal" class="fixed inset-0 modal-overlay z-[110] p-4">
         <div id="modal-content-wrapper" class="w-full max-w-4xl relative transform transition-all custom-scrollbar flex items-center justify-center">
-            <div id="modal-content" class="relative z-10 transition-opacity duration-500 opacity-100 w-full"></div>
+            <div id="modal-content" class="relative z-10 transition-opacity duration-300 opacity-100 w-full"></div>
         </div>
     </div>
 
-    <!-- SISTEMA DE ALMACENAMIENTO (Google Sheets en la Nube) -->
+    <!-- SISTEMA DE ALMACENAMIENTO -->
     <script>
         window.saveParticipantToDB = (playerName, maxPos) => {
             const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydlU8RbcjVKf6g0GIIvDtDYrhFoc9KWOAG8C-iHiqiQ0JeKUuysiWsDoWMCfo6_jqw/exec";
@@ -470,7 +450,6 @@
         };
     </script>
 
-    <!-- BANCO DE PREGUNTAS: 90 EXCLUSIVAS DEL PDF DEL CURSO -->
     <script>
         const questionsDB = [
             { topic: "Embudo de Ventas", q: "¿Qué es un Embudo de Ventas o Funnel Marketing?", a: "Es una representación visual del proceso de compra del cliente.", options: ["Una estrategia de descuentos en tiendas.", "Una representación visual del proceso de compra del cliente.", "Un software para enviar correos masivos."], correct: 1 },
@@ -568,7 +547,6 @@
         const playerColors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#a855f7", "#ec4899", "#06b6d4", "#eab308", "#ffffff", "#6366f1"];
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-        // Gestor de Interfaz
         const ui = {
             players: [],
             addPlayer() {
@@ -602,38 +580,29 @@
             },
             async startGame() {
                 const startScreen = document.getElementById('start-screen');
-                
-                // Fade out inicial suave
                 startScreen.style.opacity = '0';
                 startScreen.style.transform = 'translateY(-20px) scale(0.95)';
-                
                 setTimeout(async () => {
                     startScreen.style.display = 'none';
                     const gameContainer = document.getElementById('game-container');
                     gameContainer.style.display = 'flex';
-                    
-                    void gameContainer.offsetWidth; // Reflow
+                    void gameContainer.offsetWidth;
                     gameContainer.style.opacity = '1';
-                    
                     window.game = new Game(this.players);
-                    
                     if (window.saveParticipantToDB) {
                         for (const p of this.players) { window.saveParticipantToDB(p.name, 1); }
                     }
-
                     await window.game.announceTurn(); 
                 }, 800);
             }
         };
 
-        // Motor de Audio Combinado: Radio Streaming + Efectos de Web API (Tic-Tac)
         const audioManager = {
             ctx: null,
             isMuted: true,
             radioStream: null,
 
             init() {
-                // Iniciar motor de efectos "TAC"
                 if (!this.ctx) {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     this.ctx = new AudioContext();
@@ -641,8 +610,6 @@
                 if (this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
-                
-                // Enlazar radio streaming
                 if (!this.radioStream) {
                     this.radioStream = document.getElementById('radio-stream');
                     this.radioStream.volume = document.getElementById('volume-slider').value;
@@ -653,25 +620,21 @@
                 this.isMuted = !this.isMuted;
                 const icon = document.getElementById('audio-icon');
                 const btn = document.getElementById('audio-toggle-btn');
-                
-                this.init(); // Asegura instanciar audio context y radio
+                this.init(); 
 
                 if (this.isMuted) {
-                    // Silenciar y pausar todo
                     icon.className = 'fas fa-volume-mute';
                     btn.classList.remove('text-white', 'bg-indigo-600', 'border-indigo-400');
                     btn.classList.add('text-slate-400', 'bg-slate-800', 'border-slate-600');
                     if (this.radioStream) this.radioStream.pause();
                 } else {
-                    // Activar radio y efectos
                     icon.className = 'fas fa-broadcast-tower animate-pulse'; 
                     btn.classList.remove('text-slate-400', 'bg-slate-800', 'border-slate-600');
                     btn.classList.add('text-white', 'bg-indigo-600', 'border-indigo-400');
-                    
                     if (this.radioStream) {
-                        this.radioStream.play().catch(e => console.log("Streaming bloqueado temporalmente por navegador:", e));
+                        this.radioStream.play().catch(e => console.log("Streaming bloqueado temporalmente:", e));
                     }
-                    this.playTic(false); // Prueba de activación
+                    this.playTic(false); 
                 }
             },
 
@@ -683,12 +646,10 @@
 
             playTic(isUrgent = false) {
                 if (!this.ctx || this.isMuted) return;
-
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
 
-                // Sonido "TAC" seco (no interfiere con la música)
                 osc.type = isUrgent ? 'square' : 'triangle'; 
                 osc.frequency.setValueAtTime(isUrgent ? 800 : 400, t);
                 osc.frequency.exponentialRampToValueAtTime(isUrgent ? 400 : 200, t + 0.1);
@@ -699,7 +660,6 @@
 
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
-                
                 osc.start(t);
                 osc.stop(t + 0.1);
             }
@@ -712,8 +672,6 @@
                 this.isMoving = true; 
                 this.isFirstTurn = true; 
                 this.specialSettings = { ladders: {}, traps: {}, boost: [] };
-                this.specialPaths = {}; 
-                
                 this.usedQuestions = new Set();
                 this.lastTopic = null;
                 this.timerInterval = null;
@@ -771,15 +729,15 @@
 
                 await this.updateModalContent(html);
                 this.toggleModal(true);
-                await sleep(3000);
+                await sleep(2000); // Reducido ligeramente para mayor agilidad
                 this.toggleModal(false);
-                await sleep(600);
+                await sleep(400);
                 this.isMoving = false; 
                 this.startTurnTimer(); 
             }
 
             startTurnTimer() {
-                if (this.players.length === 1) return; // Si es 1 jugador, no hay límite de tiempo
+                if (this.players.length === 1) return; 
 
                 const display = document.getElementById('turn-timer-display');
                 const timeLeftSpan = document.getElementById('turn-time-left');
@@ -796,16 +754,16 @@
                     
                     if (time <= 5 && time > 0) {
                         timeLeftSpan.classList.add('text-red-500', 'animate-ping');
-                        audioManager.playTic(true); // Tic agudo y urgente (últimos 5 seg)
+                        audioManager.playTic(true); 
                     } else if (time > 0) {
-                        audioManager.playTic(false); // Tic normal de reloj
+                        audioManager.playTic(false); 
                     }
 
                     if (time <= 0) {
                         this.stopTurnTimer();
                         this.handleTimeOutTurn();
                     }
-                }, 1000); // 1 sonido cada 1 segundo exacto
+                }, 1000); 
             }
 
             stopTurnTimer() {
@@ -824,9 +782,9 @@
                     </div>`;
                 await this.updateModalContent(html); 
                 this.toggleModal(true); 
-                await sleep(3500); 
+                await sleep(2500); 
                 this.toggleModal(false); 
-                await sleep(600);
+                await sleep(500);
                 this.endTurn();
             }
 
@@ -836,10 +794,8 @@
                     this.usedQuestions.clear();
                     candidates = questionsDB.map((q, idx) => ({ ...q, idx }));
                 }
-                
                 let finalPool = candidates.filter(q => q.topic !== this.lastTopic);
                 if (finalPool.length === 0) finalPool = candidates;
-                
                 const selected = finalPool[Math.floor(Math.random() * finalPool.length)];
                 this.usedQuestions.add(selected.idx);
                 this.lastTopic = selected.topic;
@@ -941,32 +897,18 @@
                 const boardRect = board.getBoundingClientRect();
                 if (boardRect.width === 0) return; 
                 
+                // OPTIMIZACIÓN: Se removió por completo los costosos <filter> de blur SVG. 
+                // Usaremos trazos gruesos semitransparentes en CSS (mucho más rápido en la GPU).
                 let svgHTML = `
                 <svg width="100%" height="100%" style="position:absolute; top:0; left:0; overflow:visible;">
                     <defs>
-                        <filter id="neon-glow-green" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                            <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                        <filter id="neon-glow-red" x="-50%" y="-50%" width="200%" height="200%">
-                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                            <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                        
                         <marker id="vector-target-green" viewBox="0 0 24 24" refX="12" refY="12" markerWidth="20" markerHeight="20" orient="auto">
-                            <circle cx="12" cy="12" r="7" fill="none" stroke="#4ade80" stroke-width="2" filter="url(#neon-glow-green)" />
-                            <circle cx="12" cy="12" r="3" fill="#4ade80" filter="url(#neon-glow-green)" />
+                            <circle cx="12" cy="12" r="7" fill="none" stroke="#4ade80" stroke-width="2" />
+                            <circle cx="12" cy="12" r="3" fill="#4ade80" />
                         </marker>
-                        
                         <marker id="vector-target-red" viewBox="0 0 24 24" refX="12" refY="12" markerWidth="20" markerHeight="20" orient="auto">
-                            <circle cx="12" cy="12" r="7" fill="none" stroke="#f87171" stroke-width="2" filter="url(#neon-glow-red)" />
-                            <circle cx="12" cy="12" r="3" fill="#f87171" filter="url(#neon-glow-red)" />
+                            <circle cx="12" cy="12" r="7" fill="none" stroke="#f87171" stroke-width="2" />
+                            <circle cx="12" cy="12" r="3" fill="#f87171" />
                         </marker>
                     </defs>`;
 
@@ -1025,11 +967,12 @@
 
                     const pathData = `M ${x1} ${y1} C ${cx1} ${cy1} ${cx2} ${cy2} ${x2} ${y2}`;
 
+                    // OPTIMIZACIÓN: Simulación del neón dibujando la sombra por detrás sin filtro gaussiano.
                     if (type === 'ladder') {
-                        svgHTML += `<path d="${pathData}" fill="none" stroke="#22c55e" stroke-width="8" opacity="0.3" filter="url(#neon-glow-green)" />`;
+                        svgHTML += `<path d="${pathData}" fill="none" stroke="#22c55e" stroke-width="10" opacity="0.25" />`; 
                         svgHTML += `<path d="${pathData}" class="dash-anim-vector" fill="none" stroke="#4ade80" stroke-width="4" stroke-dasharray="15, 15" stroke-linecap="round" marker-end="url(#vector-target-green)" />`;
                     } else {
-                        svgHTML += `<path d="${pathData}" fill="none" stroke="#b91c1c" stroke-width="8" opacity="0.3" filter="url(#neon-glow-red)" />`;
+                        svgHTML += `<path d="${pathData}" fill="none" stroke="#b91c1c" stroke-width="10" opacity="0.25" />`; 
                         svgHTML += `<path d="${pathData}" class="dash-anim-vector" fill="none" stroke="#f87171" stroke-width="4" stroke-dasharray="15, 15" stroke-linecap="round" marker-end="url(#vector-target-red)" />`;
                     }
                 };
@@ -1058,7 +1001,8 @@
                         pawn.className = 'player-pawn';
                         pawn.style.backgroundColor = p.color;
                         pawn.innerText = p.id;
-                        pawn.style.transition = 'left 0.3s ease, top 0.3s ease'; 
+                        // Eliminamos transition css directo para no estropear la API the animations de JS
+                        pawn.style.transition = 'none'; 
                         document.body.appendChild(pawn);
                     }
                     
@@ -1090,20 +1034,24 @@
                 const rect = cell.getBoundingClientRect();
                 const pawn = document.getElementById(`pawn-${player.id}`);
                 
-                pawn.style.transition = 'left 0.3s ease, top 0.3s ease';
                 pawn.style.top = `${window.scrollY + rect.top + rect.height/2 - pawnHalf + offsetY}px`;
                 pawn.style.left = `${window.scrollX + rect.left + rect.width/2 - pawnHalf + offsetX}px`;
+                pawn.style.transform = `none`;
             }
 
+            // OPTIMIZACIÓN CRÍTICA: Ahora los saltos se animan usando Transformaciones 3D en la GPU
+            // Ya NO se cambian el "top" y "left" en medio de la animación.
             async positionPawnWithJump(player, pawnHalf, offsetX = 0, offsetY = 0) {
                 const cell = document.getElementById(`cell-${player.pos}`);
                 if (!cell) return;
                 const rect = cell.getBoundingClientRect();
                 const pawn = document.getElementById(`pawn-${player.id}`);
                 
+                // Obtenemos la posición de inicio
                 const currentLeft = parseFloat(pawn.style.left);
                 const currentTop = parseFloat(pawn.style.top);
                 
+                // Calculamos a dónde debe llegar
                 const targetLeft = window.scrollX + rect.left + rect.width/2 - pawnHalf + offsetX;
                 const targetTop = window.scrollY + rect.top + rect.height/2 - pawnHalf + offsetY;
 
@@ -1113,24 +1061,30 @@
                     return;
                 }
 
+                // Aseguramos que la ficha parta de su sitio real sin CSS transitions interfiriendo
                 pawn.style.transition = 'none';
 
-                const midX = (currentLeft + targetLeft) / 2;
-                const midY = Math.min(currentTop, targetTop) - 45; 
+                // Distancias a recorrer
+                const deltaX = targetLeft - currentLeft;
+                const deltaY = targetTop - currentTop;
+                const jumpHeight = -45; // Arco del salto
 
+                // La magia de la fluidez: Animamos con "transform: translate", que no consume CPU
                 const animation = pawn.animate([
-                    { left: `${currentLeft}px`, top: `${currentTop}px`, transform: 'scale(1)' },
-                    { left: `${midX}px`, top: `${midY}px`, transform: 'scale(1.25)' }, 
-                    { left: `${targetLeft}px`, top: `${targetTop}px`, transform: 'scale(1)' }
+                    { transform: `translate(0px, 0px) scale(1)` },
+                    { transform: `translate(${deltaX / 2}px, ${Math.min(0, deltaY) + jumpHeight}px) scale(1.25)` }, 
+                    { transform: `translate(${deltaX}px, ${deltaY}px) scale(1)` }
                 ], {
-                    duration: 450, 
+                    duration: 350, // Ligeramente más rápido
                     easing: 'ease-in-out',
                 });
 
                 await animation.finished;
 
+                // Solo al final, consolidamos la nueva posición base en top/left
                 pawn.style.left = `${targetLeft}px`;
                 pawn.style.top = `${targetTop}px`;
+                pawn.style.transform = `none`;
             }
 
             updateUI(fade = false) {
@@ -1149,7 +1103,7 @@
                         statusDot.style.backgroundColor = current.color;
                         turnDisplay.style.opacity = '1';
                         statusDot.style.opacity = '1';
-                    }, 400); 
+                    }, 300); 
                 } else {
                     turnDisplay.innerText = `TURNO: ${displayName} — Casilla ${current.pos}`;
                     statusDot.style.backgroundColor = current.color;
@@ -1169,7 +1123,7 @@
                     dice.innerHTML = `<i class="fas ${icons[res-1]}"></i>`;
                     dice.classList.remove('dice-rolling');
                     this.askQuestion(res, Math.min(this.players[this.currentPlayerIdx].pos + res, 30));
-                }, 1000);
+                }, 800); // Reducido el tiempo girando
             }
 
             toggleModal(show) {
@@ -1180,10 +1134,10 @@
             async updateModalContent(html) {
                 const c = document.getElementById('modal-content');
                 c.style.opacity = '0'; 
-                await sleep(500); 
+                await sleep(300); 
                 c.innerHTML = html; 
                 c.style.opacity = '1'; 
-                await sleep(500);
+                await sleep(300);
             }
 
             startTimer(onTimeout) {
@@ -1249,8 +1203,8 @@
                             void fb.offsetWidth; 
                             fb.style.opacity = '1'; 
                             
-                            await sleep(2500); 
-                            this.toggleModal(false); await sleep(600); this.endTurn(); resolve();
+                            await sleep(2000); 
+                            this.toggleModal(false); await sleep(400); this.endTurn(); resolve();
                         });
                     });
                     this.toggleModal(true);
@@ -1272,7 +1226,7 @@
                                 void fb.offsetWidth;
                                 fb.style.opacity = '1'; 
 
-                                await sleep(1500); 
+                                await sleep(1200); 
 
                                 const adv = `
                                     <div class="bg-slate-900 border-2 rounded-[2rem] p-8 md:p-12 shadow-2xl text-center" style="border-color: ${p.color}; background: linear-gradient(135deg, rgba(15,23,42,1) 0%, ${p.color}15 100%);">
@@ -1281,7 +1235,7 @@
                                         <p class="text-xl md:text-2xl text-slate-300 font-bold mb-4 md:mb-6">Avanzas hasta la casilla</p>
                                         <div class="text-7xl md:text-8xl font-black" style="color: ${p.color}; text-shadow: 0 0 25px ${p.color}66">${target === 30 ? '<i class="fas fa-trophy text-5xl md:text-6xl mr-3"></i> META' : target}</div>
                                     </div>`;
-                                await this.updateModalContent(adv); await sleep(3000); this.toggleModal(false); await sleep(600); await this.moveSteps(target); resolve();
+                                await this.updateModalContent(adv); await sleep(2500); this.toggleModal(false); await sleep(400); await this.moveSteps(target); resolve();
                             } else {
                                 b.classList.add('bg-red-600/40', 'border-red-500', 'text-white');
                                 fb.innerHTML = 'INCORRECTO'; 
@@ -1291,8 +1245,8 @@
                                 void fb.offsetWidth;
                                 fb.style.opacity = '1'; 
 
-                                await sleep(2000); 
-                                this.toggleModal(false); await sleep(600); this.endTurn(); resolve();
+                                await sleep(1500); 
+                                this.toggleModal(false); await sleep(400); this.endTurn(); resolve();
                             }
                         }
                     };
@@ -1334,7 +1288,7 @@
                             <h2 class="text-3xl md:text-5xl font-black text-white mb-2 md:mb-4 uppercase tracking-tighter">¡ZONA NARANJA!</h2>
                             <p class="text-xl md:text-3xl text-slate-300 font-bold">Has ganado un <span class="text-orange-400">TIRO EXTRA</span></p>
                         </div>`;
-                    await this.updateModalContent(html); this.toggleModal(true); await sleep(3000); this.toggleModal(false); await sleep(600);
+                    await this.updateModalContent(html); this.toggleModal(true); await sleep(2500); this.toggleModal(false); await sleep(400);
                     this.isMoving = false; 
                     this.startTurnTimer(); 
                     return;
@@ -1353,7 +1307,7 @@
                             <div class="text-6xl md:text-7xl mb-4 md:mb-6" style="color:${theme}"><i class="fas ${theme==='#ef4444'?'fa-skull-crossbones':'fa-angle-double-up'}"></i></div>
                             <h2 class="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-tight">${msg}</h2>
                         </div>`;
-                    await this.updateModalContent(html); this.toggleModal(true); await sleep(3000); this.toggleModal(false); await sleep(600);
+                    await this.updateModalContent(html); this.toggleModal(true); await sleep(2500); this.toggleModal(false); await sleep(400);
                     
                     await this.moveSteps(next, visited);
                 } else this.endTurn();
@@ -1376,7 +1330,7 @@
                 board.style.opacity = '0';
                 svg.style.opacity = '0';
 
-                await sleep(600); 
+                await sleep(400); 
 
                 this.randomizeSpecials();
                 this.renderBoard();
@@ -1385,7 +1339,7 @@
                 setTimeout(() => {
                     board.style.opacity = '1';
                     svg.style.opacity = '1';
-                }, 150);
+                }, 100);
 
                 await this.announceTurn(); 
             }
