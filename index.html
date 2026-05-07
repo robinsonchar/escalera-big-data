@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Escalera del Big Data en Comunicación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            /* Eliminamos el fondo fijo e introducimos el motor de colores animados */
+            background-color: #064e3b; /* Inicia en Verde Oscuro */
+            animation: bgColorChange 105s infinite ease-in-out;
+            color: #f8fafc;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Capa de difuminado Negro que se mezcla y mueve con los colores */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, transparent 15%, #000000 95%);
+            background-size: 200% 200%;
+            animation: gradientMove 20s infinite alternate ease-in-out;
+            pointer-events: none; /* Evita que bloquee los clics del juego */
+        }
+
+        /* Animación de los 7 Colores Oscuros (15 Segundos cada uno = 105s total) */
+        @keyframes bgColorChange {
+            0%, 100% { background-color: #064e3b; } /* Verde Oscuro */
+            14.2% { background-color: #7f1d1d; }    /* Rojo Oscuro */
+            28.5% { background-color: #4c1d95; }    /* Morado/Lila Oscuro */
+            42.8% { background-color: #854d0e; }    /* Amarillo Oscuro */
+            57.1% { background-color: #86198f; }    /* Fucsia Oscuro */
+            71.4% { background-color: #9a3412; }    /* Naranja Oscuro */
+            85.7% { background-color: #1e3a8a; }    /* Azul Oscuro */
+        }
+
+        /* Animación del difuminado para dar sensación de volumen */
+        @keyframes gradientMove {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 100%; }
+        }
+
+        #start-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            /* Modificado a semi-transparente para poder ver el fondo animado */
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.8s ease;
+        }
+
+        .logo-container img {
+            width: 250px;
+            max-width: 100%;
+            filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.5));
+            margin-bottom: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .logo-container img { width: 350px; margin-bottom: 2rem; }
+        }
+
+        .setup-card {
+            width: 100%;
+            max-width: 800px; 
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .setup-card { padding: 2.5rem; }
+        }
+
+        #game-container {
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .board-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: min(1050px, calc((100vh - 220px) * 1.2)); 
+            margin: 0 auto;
+        }
+
+        #game-board, #svg-container {
+            transition: opacity 0.7s ease-in-out;
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 6px;
+            width: 100%;
+        }
+        @media (min-width: 768px) {
+            .board-grid { gap: 12px; }
+        }
+
+        .cell {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            font-weight: 800;
+            font-size: clamp(0.75rem, 2vw, 1.2rem);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @media (min-width: 768px) {
+            .cell { border-radius: 16px; }
+        }
+
+        .cell-special-up { 
+            background: rgba(34, 197, 94, 0.15); 
+            color: #4ade80; 
+            animation: neon-green 1.2s ease-in-out infinite alternate; 
+        }
+        .cell-special-down { 
+            background: rgba(239, 68, 68, 0.15); 
+            color: #f87171; 
+            animation: neon-red 1.2s ease-in-out infinite alternate; 
+        }
+        .cell-special-orange { 
+            background: rgba(249, 115, 22, 0.15); 
+            color: #fb923c; 
+            animation: neon-orange 1.2s ease-in-out infinite alternate; 
+        }
+
+        @keyframes neon-green {
+            from { box-shadow: 0 0 5px rgba(34, 197, 94, 0.2), inset 0 0 10px rgba(34, 197, 94, 0.1); border: 2px solid rgba(34, 197, 94, 0.4); }
+            to { box-shadow: 0 0 20px rgba(34, 197, 94, 0.9), inset 0 0 25px rgba(34, 197, 94, 0.6); border: 2px solid rgba(34, 197, 94, 1); }
+        }
+        @keyframes neon-red {
+            from { box-shadow: 0 0 5px rgba(239, 68, 68, 0.2), inset 0 0 10px rgba(239, 68, 68, 0.1); border: 2px solid rgba(239, 68, 68, 0.4); }
+            to { box-shadow: 0 0 20px rgba(239, 68, 68, 0.9), inset 0 0 25px rgba(239, 68, 68, 0.6); border: 2px solid rgba(239, 68, 68, 1); }
+        }
+        @keyframes neon-orange {
+            from { box-shadow: 0 0 5px rgba(249, 115, 22, 0.2), inset 0 0 10px rgba(249, 115, 22, 0.1); border: 2px solid rgba(249, 115, 22, 0.4); }
+            to { box-shadow: 0 0 20px rgba(249, 115, 22, 0.9), inset 0 0 25px rgba(249, 115, 22, 0.6); border: 2px solid rgba(249, 115, 22, 1); }
+        }
+
+        .cell-winner { background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 100%); border: 2px solid #fbbf24; color: #fbbf24; }
+        @media (min-width: 768px) {
+            .cell-winner { border-width: 3px; }
+        }
+
+        .player-pawn {
+            border-radius: 50%;
+            position: absolute;
+            z-index: 50;
+            border: 2px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: white;
+            transform-origin: bottom center;
+        }
+
+        .floating-action { position: fixed; z-index: 100; }
+        .reset-container { bottom: 15px; left: 15px; top: auto; }
+        .dice-container { top: 15px; right: 15px; }
+        @media (min-width: 768px) {
+            .reset-container { bottom: 20px; left: 20px; top: auto; }
+            .dice-container { top: 20px; right: 20px; }
+        }
+
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+            border: 3px solid #3b82f6;
+            transition: all 0.3s ease;
+            font-size: 1.8rem;
+        }
+        @media (min-width: 768px) {
+            .action-btn { width: 90px; height: 90px; border-radius: 20px; border-width: 4px; font-size: 3rem; }
+        }
+
+        .action-btn:hover { transform: translateY(-4px) scale(1.05); }
+
+        .dice-rolling { animation: roll 0.1s infinite linear; }
+        @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+            opacity: 0;
+            visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        #modal-content-wrapper {
+            max-height: 95vh; 
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        #turn-display, #status-dot {
+            transition: opacity 0.4s ease;
+        }
+
+        #turn-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1rem;
+            transition: all 0.5s ease;
+        }
+        @media (min-width: 768px) {
+            #turn-container { gap: 10px; padding: 10px 24px; border-width: 2px; margin-bottom: 1.5rem; }
+        }
+
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; animation: status-pulse 2s infinite; }
+        @media (min-width: 768px) { .status-dot { width: 12px; height: 12px; } }
+        
+        @keyframes status-pulse { 0% { transform: scale(1); opacity: 1; } 70% { transform: scale(1.4); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
+        #timer-val { font-variant-numeric: tabular-nums; }
+        .timer-critical { color: #ef4444 !important; animation: blink 0.5s infinite; }
+        @keyframes blink { to { opacity: 0.3; } }
+
+        .text-blink { animation: text-blink-anim 1s ease-in-out infinite alternate; }
+        @keyframes text-blink-anim { from { opacity: 1; } to { opacity: 0.2; } }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.8); }
+        
+        .dash-anim-vector {
+            animation: vectorDash 1.2s linear infinite;
+        }
+        @keyframes vectorDash {
+            to { stroke-dashoffset: -30; }
+        }
+
+        /* ESTILOS DEL CONTROLADOR DE RADIO MINIMALISTA */
+        .radio-control-wrapper {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            z-index: 250;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 16px 8px;
+            border-radius: 50px;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+        @media (min-width: 768px) {
+            .radio-control-wrapper { bottom: 20px; right: 20px; padding: 20px 10px; }
+        }
+        .radio-control-wrapper:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        /* Slider Vertical CSS puro (Cross-browser) */
+        .vol-slider-container {
+            width: 24px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .vol-slider {
+            -webkit-appearance: none;
+            width: 70px; /* Al rotar, este es el alto visual */
+            height: 4px;
+            background: #475569;
+            outline: none;
+            border-radius: 4px;
+            transform: rotate(-90deg);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(129, 140, 248, 0.8);
+            transition: transform 0.1s;
+        }
+        .vol-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ELEMENTO DE AUDIO STREAMING RADIO -->
+    <audio id="radio-stream" src="https://cdn-peer031.streaming-pro.com:8025/ibizaglobalradio.mp3?_t=1777610980068" preload="none"></audio>
+
+    <!-- CONTROLADOR GLOBAL DE AUDIO Y RADIO (Inferior Derecha) -->
+    <div class="radio-control-wrapper group">
+        <!-- Barra de Volumen Vertical (50% por defecto) -->
+        <div class="vol-slider-container opacity-60 group-hover:opacity-100 transition-opacity">
+            <input type="range" id="volume-slider" class="vol-slider" min="0" max="1" step="0.01" value="0.5" oninput="audioManager.setVolume(this.value)" title="Ajustar Volumen">
+        </div>
+        
+        <!-- Botón Toggle Minimalista -->
+        <div id="audio-toggle-btn" onclick="audioManager.toggleAudio()" class="w-10 h-10 md:w-12 md:h-12 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center text-slate-400 cursor-pointer transition-all hover:scale-105 hover:bg-indigo-600 hover:text-white hover:border-indigo-400 text-sm md:text-lg" title="Activar/Silenciar Radio y Efectos">
+            <i id="audio-icon" class="fas fa-volume-mute"></i>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE INICIO -->
+    <div id="start-screen">
+        <div class="logo-container">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2GfEBXE21cSNw-Uj2m6vBBFDHn31z4zH5SXJa-UnHEP7j63G98XGkX6K_PfJ1SoLctZvsTYgHf_kRujXn-0SZ_Epl4qEhbyW6_nKmT189FSOEZ2EKV7FKSdEvoUZUK51qJSrvsrmvVrAQRtsgaFo6Gmjp4kzWWpgpC1VJErpCeMtOKxEJan2A1WX3P_VI/s16000/ESCALERA%20400x300.png" alt="Logo">
+        </div>
+        <div class="setup-card custom-scrollbar">
+            <h2 class="text-2xl md:text-4xl font-black text-white mb-3 uppercase tracking-tight">Registro de Participantes</h2>
+            <p class="text-slate-400 mb-6 md:mb-8 text-sm md:text-lg">Añade hasta 10 participantes para iniciar el desafío.</p>
+            
+            <div class="mb-6 md:mb-8">
+                <form onsubmit="event.preventDefault(); ui.addPlayer();" class="flex flex-col sm:flex-row gap-3 mb-5">
+                    <input type="text" id="player-input" maxlength="15" placeholder="Nombre del jugador o equipo..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 md:px-5 md:py-4 text-base md:text-xl text-white focus:outline-none focus:ring-4 focus:ring-purple-600 transition-all">
+                    <button type="button" onclick="ui.addPlayer()" class="bg-purple-600 hover:bg-purple-500 py-3 md:py-4 px-8 rounded-xl font-black text-base md:text-xl transition-all w-full sm:w-auto">AÑADIR</button>
+                </form>
+                <div id="setup-player-list" class="flex flex-wrap gap-2 md:gap-3 justify-center py-2 min-h-[50px]">
+                    <!-- Listado -->
+                </div>
+            </div>
+
+            <button id="btn-play" onclick="ui.startGame()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 md:py-5 rounded-2xl font-black text-xl md:text-3xl tracking-widest transition-all disabled:opacity-20 shadow-2xl" disabled>JUGAR</button>
+            
+            <p id="player-count-info" class="text-xs md:text-sm text-slate-500 mt-4 uppercase font-bold tracking-widest">Participantes: 0 / 10</p>
+
+            <!-- AVISO DE PANTALLA COMPLETA -->
+            <div class="mt-6 md:mt-8 inline-flex items-center justify-center gap-2 text-indigo-200 text-sm md:text-lg font-bold bg-indigo-900/40 py-3 px-5 md:px-8 rounded-xl border border-indigo-500/30 w-full sm:w-auto">
+                <i class="fas fa-expand text-lg md:text-xl"></i> Para una mejor experiencia oprimir F11 para pantalla completa
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR DEL JUEGO -->
+    <div id="game-container">
+        
+        <!-- LOGO REDUCIDO EN EL TABLERO (Superior Izquierda) -->
+        <div class="fixed top-4 left-4 md:top-6 md:left-6 z-[60] pointer-events-none flex flex-col items-center gap-3">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2GfEBXE21cSNw-Uj2m6vBBFDHn31z4zH5SXJa-UnHEP7j63G98XGkX6K_PfJ1SoLctZvsTYgHf_kRujXn-0SZ_Epl4qEhbyW6_nKmT189FSOEZ2EKV7FKSdEvoUZUK51qJSrvsrmvVrAQRtsgaFo6Gmjp4kzWWpgpC1VJErpCeMtOKxEJan2A1WX3P_VI/s16000/ESCALERA%20400x300.png" alt="Logo Miniatura" class="w-[225px] md:w-[300px] drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+            
+            <!-- Reloj de conteo regresivo de turno (Debajo del logo) -->
+            <div id="turn-timer-display" class="hidden bg-slate-900/90 border-2 border-red-500/50 rounded-2xl px-5 py-2 shadow-xl backdrop-blur-md transition-all duration-300 pointer-events-auto">
+                <span class="text-red-400 font-black text-sm md:text-base tracking-widest flex items-center gap-2">
+                    <i class="fas fa-stopwatch animate-pulse"></i> TIEMPO: <span id="turn-time-left" class="text-xl md:text-2xl font-mono text-white">20</span>s
+                </span>
+            </div>
+        </div>
+
+        <!-- BOTÓN DE SALIR (Inferior Izquierda) -->
+        <div class="floating-action reset-container flex flex-col items-center gap-2">
+            <button onclick="location.reload()" class="action-btn bg-slate-800 text-slate-400 border-slate-700 hover:bg-red-500 hover:text-white transition-colors" title="Salir">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+            <span class="text-xs md:text-base font-black text-slate-400 tracking-widest text-blink">SALIR</span>
+        </div>
+
+        <!-- BOTÓN DE JUGAR (Superior Derecha) -->
+        <div class="floating-action dice-container flex flex-col items-center gap-2">
+            <div id="dice-visual" class="action-btn text-blue-600" onclick="game.rollDice()" title="Tirar Dado">
+                <i class="fas fa-dice-d6"></i>
+            </div>
+            <span class="text-xs md:text-base font-black text-blue-400 tracking-widest text-blink">JUGAR</span>
+        </div>
+
+        <div class="w-full flex flex-col items-center justify-center mt-16 md:mt-4">
+            <div id="turn-container">
+                <div id="status-dot" class="status-dot"></div>
+                <div id="turn-display" class="text-xs sm:text-sm md:text-xl font-bold uppercase tracking-[0.1em] md:tracking-[0.2em] text-slate-100">
+                    ESPERANDO...
+                </div>
+            </div>
+
+            <!-- Wrapper inteligente: Se ajusta a la altura del dispositivo -->
+            <div class="board-wrapper">
+                <div id="game-board" class="board-grid">
+                    <!-- Casillas JS -->
+                </div>
+                <!-- Lienzo de vectores para las flechas de conexión -->
+                <div id="svg-container" class="absolute top-0 left-0 w-full h-full pointer-events-none z-[45]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Unificado adaptable por altura -->
+    <div id="modal" class="fixed inset-0 modal-overlay z-[110] p-4">
+        <div id="modal-content-wrapper" class="w-full max-w-4xl relative transform transition-all custom-scrollbar flex items-center justify-center">
+            <div id="modal-content" class="relative z-10 transition-opacity duration-500 opacity-100 w-full"></div>
+        </div>
+    </div>
+
+    <!-- SISTEMA DE ALMACENAMIENTO (Google Sheets en la Nube) -->
+    <script>
+        window.saveParticipantToDB = (playerName, maxPos) => {
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydlU8RbcjVKf6g0GIIvDtDYrhFoc9KWOAG8C-iHiqiQ0JeKUuysiWsDoWMCfo6_jqw/exec";
+            try {
+                if (SCRIPT_URL && SCRIPT_URL.startsWith("http")) {
+                    fetch(SCRIPT_URL + "?nombre=" + encodeURIComponent(playerName) + "&maxPos=" + maxPos, {
+                        method: 'GET',
+                        mode: 'no-cors'
+                    }).then(() => {
+                        console.log(`Sincronizado: ${playerName} - Casilla: ${maxPos}`);
+                    }).catch(err => console.error("Error de red:", err));
+                }
+            } catch (error) {
+                console.error("Error procesando envío:", error);
+            }
+        };
+    </script>
+
+    <!-- BANCO DE PREGUNTAS: 90 EXCLUSIVAS DEL PDF DEL CURSO -->
+    <script>
+        const questionsDB = [
+            { topic: "Embudo de Ventas", q: "¿Qué es un Embudo de Ventas o Funnel Marketing?", a: "Es una representación visual del proceso de compra del cliente.", options: ["Una estrategia de descuentos en tiendas.", "Una representación visual del proceso de compra del cliente.", "Un software para enviar correos masivos."], correct: 1 },
+            { topic: "Embudo de Ventas", q: "¿Por qué se llama 'embudo' este proceso?", a: "Porque los prospectos se van reduciendo al avanzar las etapas.", options: ["Porque los prospectos se van reduciendo al avanzar las etapas.", "Porque los precios caen como en un embudo.", "Porque atrae a todos los usuarios sin filtros."], correct: 0 },
+            { topic: "Embudo de Ventas", q: "¿Cuáles son las 4 etapas del embudo vistas en clase?", a: "Conciencia, Interés, Decisión, Acción.", options: ["Conciencia, Interés, Decisión, Acción.", "Atracción, Visita, Compra, Salida.", "Investigación, Análisis, Estrategia, Venta."], correct: 0 },
+            { topic: "Embudo de Ventas", q: "¿Para qué sirve medir resultados en el embudo?", a: "Para analizar métricas clave y evaluar el rendimiento.", options: ["Para cambiar la sede de la empresa.", "Para subir los precios al máximo.", "Para analizar métricas clave y evaluar el rendimiento."], correct: 2 },
+            { topic: "Embudo de Ventas", q: "¿Cuál es la primera etapa donde entran muchos prospectos?", a: "Conciencia.", options: ["Acción.", "Conciencia.", "Decisión."], correct: 1 },
+            { topic: "Embudo de Ventas", q: "Optimizar el proceso de ventas nos permite...", a: "Identificar y mejorar las etapas de conversión.", options: ["Ocultar los defectos del producto.", "Identificar y mejorar las etapas de conversión.", "Despedir a los vendedores."], correct: 1 },
+            { topic: "Embudo de Ventas", q: "¿Qué se busca en la etapa de 'Acción' del embudo?", a: "Lograr mayores ventas y conversiones.", options: ["Lograr mayores ventas y conversiones.", "Que el usuario apenas conozca la marca.", "Analizar a la competencia."], correct: 0 },
+            { topic: "Business Intelligence", q: "¿A qué se refiere el Business Intelligence (BI)?", a: "Procesos para analizar datos y convertirlos en información estratégica.", options: ["Contratar líderes inteligentes.", "Procesos para analizar datos y convertirlos en información estratégica.", "Crear campañas creativas en redes."], correct: 1 },
+            { topic: "Business Intelligence", q: "En la jerarquía de BI, ¿cuál es el nivel más bajo (la base)?", a: "Datos de Negocio.", options: ["Toma de Decisiones.", "Información Estratégica.", "Datos de Negocio."], correct: 2 },
+            { topic: "Business Intelligence", q: "¿Qué sigue en la jerarquía de BI después de los Datos de Negocio?", a: "Análisis de Datos.", options: ["Toma de Decisiones.", "Análisis de Datos.", "Información Estratégica."], correct: 1 },
+            { topic: "Business Intelligence", q: "¿Cuál es la cima de la jerarquía del Business Intelligence?", a: "Toma de Decisiones.", options: ["Toma de Decisiones.", "Datos de Negocio.", "Análisis de Datos."], correct: 0 },
+            { topic: "Business Intelligence", q: "¿Qué herramienta de BI fue desarrollada por Microsoft?", a: "Power BI.", options: ["Tableau.", "Power BI.", "Zoho Analytics."], correct: 1 },
+            { topic: "Business Intelligence", q: "¿Qué herramienta de BI está basada en la nube para conectar datos?", a: "Domo.", options: ["Domo.", "Qlik Sense.", "Looker Studio."], correct: 0 },
+            { topic: "Business Intelligence", q: "Herramienta que utiliza tecnología de 'asociación de datos':", a: "Qlik Sense.", options: ["Yellowfin BI.", "Sisense.", "Qlik Sense."], correct: 2 },
+            { topic: "Business Intelligence", q: "Tableau se destaca como una herramienta para...", a: "Explorar y visualizar datos.", options: ["Explorar y visualizar datos.", "Diseñar piezas gráficas.", "Enviar correos masivos."], correct: 0 },
+            { topic: "Business Intelligence", q: "¿Qué beneficio del BI mejora la eficiencia detectando problemas antes de que escalen?", a: "Detección temprana de problemas.", options: ["Identificación de oportunidades.", "Reducción de tiempo en tareas.", "Detección temprana de problemas."], correct: 2 },
+            { topic: "Business Intelligence", q: "El BI aumenta la eficiencia al reducir el tiempo en...", a: "Tareas rutinarias.", options: ["El descanso del personal.", "Tareas rutinarias.", "Procesos creativos."], correct: 1 },
+            { topic: "Business Intelligence", q: "Gracias al BI, la toma de decisiones mejora al adaptar...", a: "Experiencias del cliente.", options: ["El horario de los empleados.", "Experiencias del cliente.", "Los colores del logotipo."], correct: 1 },
+            { topic: "Investigación", q: "¿Qué es la investigación descriptiva?", a: "Identificar y clasificar elementos de un fenómeno.", options: ["Identificar y clasificar elementos de un fenómeno.", "Crear hipótesis complejas.", "Experimentar con animales en laboratorio."], correct: 0 },
+            { topic: "Investigación", q: "La investigación descriptiva se enfoca en el...", a: "Qué (y no en el por qué).", options: ["Cuándo y Dónde.", "Por qué y para qué.", "Qué (y no en el por qué)."], correct: 2 },
+            { topic: "Investigación", q: "¿La investigación descriptiva usa métodos experimentales?", a: "No, utiliza métodos no experimentales sin manipular variables.", options: ["Sí, manipula todas las variables posibles.", "No, utiliza métodos no experimentales sin manipular variables.", "Solo cuando se hace en laboratorios."], correct: 1 },
+            { topic: "Investigación", q: "¿Cuál es el rol del investigador en este tipo de estudio?", a: "Observador neutral, sin influir en el fenómeno.", options: ["Debe influir directamente en el resultado.", "Observador neutral, sin influir en el fenómeno.", "Debe cambiar el comportamiento del usuario."], correct: 1 },
+            { topic: "Investigación", q: "¿En qué momento del tiempo se suele realizar la investigación descriptiva?", a: "En un momento específico (como una fotografía).", options: ["En un momento específico (como una fotografía).", "Solo en el futuro.", "Únicamente usando datos de hace 100 años."], correct: 0 },
+            { topic: "Investigación", q: "¿Qué tipo de resultados genera la investigación descriptiva?", a: "Cuantitativos y cualitativos.", options: ["Solo descripciones narrativas.", "Cuantitativos y cualitativos.", "Únicamente cifras exactas."], correct: 1 },
+            { topic: "Investigación", q: "¿Cómo es la capacidad de generalización de la investigación descriptiva?", a: "Limitada, porque no siempre usa muestras representativas.", options: ["Ilimitada, aplica para todo el mundo.", "Limitada, porque no siempre usa muestras representativas.", "Depende del presupuesto invertido."], correct: 1 },
+            { topic: "Investigación", q: "¿Para qué sirven los hallazgos de una investigación descriptiva?", a: "Como base para otras investigaciones más profundas.", options: ["Como base para otras investigaciones más profundas.", "Para detener cualquier estudio futuro.", "Para despedir empleados."], correct: 0 },
+            { topic: "Investigación", q: "En 1985, Coca-Cola cambió su fórmula debido a la competencia de...", a: "Pepsi.", options: ["Sprite.", "Fanta.", "Pepsi."], correct: 2 },
+            { topic: "Investigación", q: "¿Qué lección dejó el caso de Coca-Cola sobre la investigación?", a: "Hay que complementar encuestas con aspectos emocionales.", options: ["Nunca se debe cambiar una fórmula.", "Hay que complementar encuestas con aspectos emocionales.", "La investigación descriptiva no sirve de nada."], correct: 1 },
+            { topic: "Investigación", q: "En la rúbrica UAO vista en clase, los 'elementos visibles' a medir eran...", a: "Hombres y Mujeres.", options: ["Hombres y Mujeres.", "Estudiantes y Profesores.", "Jóvenes y Adultos mayores."], correct: 0 },
+            { topic: "Investigación", q: "La frecuencia de acciones en la rúbrica UAO consistía en medir:", a: "Ingreso / Egreso.", options: ["Ingreso / Egreso.", "Comprar / Vender.", "Lectura / Escritura."], correct: 0 },
+            { topic: "Investigación", q: "En el taller final, ¿cuántos comentarios de 'dolor de marca' deben buscar los grupos?", a: "Alrededor de 400 comentarios.", options: ["Alrededor de 50.", "Alrededor de 400 comentarios.", "Más de 1000."], correct: 1 },
+            { topic: "Investigación", q: "Después de categorizar 400 comentarios, se deben sacar...", a: "30 ideas principales.", options: ["10 ideas principales.", "30 ideas principales.", "5 insights finales."], correct: 1 },
+            { topic: "Investigación", q: "¿Qué es un 'Insight de dolor de marca'?", a: "La causa raíz detrás de las críticas de los usuarios.", options: ["El logotipo de la empresa.", "El eslogan más famoso.", "La causa raíz detrás de las críticas de los usuarios."], correct: 2 },
+            { topic: "Comunicación", q: "En la comunicación tradicional (Radio, TV), el receptor era...", a: "Pasivo.", options: ["Creativo.", "Pasivo.", "Participativo."], correct: 1 },
+            { topic: "Comunicación", q: "En la comunicación digital, el usuario es participativo y crea...", a: "UGC (User Generated Content).", options: ["Anuncios de TV.", "UGC (User Generated Content).", "Noticias en la prensa escrita."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Cuál es el objetivo principal del comunicador en el ecosistema digital?", a: "CONECTAR.", options: ["Vender más que nadie.", "CONECTAR.", "Diseñar logotipos."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Qué representa la letra 'C' inicial en C.O.N.E.C.T.A.?", a: "Contexto y Cliente (Audiencia).", options: ["Creatividad y Contenidos.", "Contexto y Cliente (Audiencia).", "Conciencia y Costos."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "En 'Contexto y Cliente', no se habla a 'jóvenes de 18 a 25', se habla a...", a: "Personas con miedos, deseos y lenguaje propio.", options: ["Clientes con tarjetas de crédito.", "Personas con miedos, deseos y lenguaje propio.", "Cuentas anónimas de internet."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Qué recomienda el Tip para entender a la audiencia?", a: "Investigar conversaciones en foros y comentarios (ej. Reddit).", options: ["Hacer solo encuestas pagas.", "Investigar conversaciones en foros y comentarios (ej. Reddit).", "Adivinar lo que quieren."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Qué representa la 'O' en C.O.N.E.C.T.A.?", a: "Objetivos (SMART).", options: ["Objetivos (SMART).", "Oportunidades de marca.", "Organización de tiempos."], correct: 0 },
+            { topic: "Modelo CONECTA", q: "Un objetivo sin número y sin fecha es solo un...", a: "Deseo.", options: ["Borrador.", "Deseo.", "Estrategia."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Qué representa la 'N' en C.O.N.E.C.T.A.?", a: "Narrativa y Tono.", options: ["Nuevos medios.", "Nicho de mercado.", "Narrativa y Tono."], correct: 2 },
+            { topic: "Modelo CONECTA", q: "¿Cuál es el ejemplo dado en clase sobre la narrativa de Dove?", a: "Su historia no es 'jabón', es 'belleza real'.", options: ["Su historia es 'higiene total'.", "Su historia no es 'jabón', es 'belleza real'.", "Su historia es 'somos los más baratos'."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "La mejor narrativa es una verdad de la organización contada de forma...", a: "Extraordinaria.", options: ["Común y corriente.", "Con noticias falsas.", "Extraordinaria."], correct: 2 },
+            { topic: "Modelo CONECTA", q: "¿Qué representa la 'E' en C.O.N.E.C.T.A.?", a: "Ecosistema y Canales.", options: ["Esfuerzo y Equipo.", "Ecosistema y Canales.", "Economía y Costos."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Es necesario que una marca esté en todas las redes sociales?", a: "No, solo donde la audiencia realmente escucha.", options: ["No, solo donde la audiencia realmente escucha.", "Sí, para ser famosa rápido.", "Sí, porque es gratis abrirlas."], correct: 0 },
+            { topic: "Modelo CONECTA", q: "¿Qué representa la segunda 'C' en C.O.N.E.C.T.A.?", a: "Contenidos (Pilares y Formatos).", options: ["Control de crisis.", "Contenidos (Pilares y Formatos).", "Correos y Clics."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Cuál es la regla de oro para crear contenidos de valor?", a: "80% aportar valor, 20% vender o pedir algo.", options: ["50% vender, 50% noticias.", "80% aportar valor, 20% vender o pedir algo.", "100% intentar vender el producto."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Qué representa la 'T' en C.O.N.E.C.T.A.?", a: "Tácticas y Temporalidad.", options: ["Tecnología y Tiempo.", "Tácticas y Temporalidad.", "Tráfico y Tendencias."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "Según el modelo, en la creación de contenido ¿qué cualidad derrota a la intensidad?", a: "La consistencia.", options: ["El presupuesto.", "El diseño gráfico.", "La consistencia."], correct: 2 },
+            { topic: "Modelo CONECTA", q: "¿Qué representa la 'A' final en C.O.N.E.C.T.A.?", a: "Analítica y Ajuste.", options: ["Agencias y Anuncios.", "Analítica y Ajuste.", "Arte y Animación."], correct: 1 },
+            { topic: "Modelo CONECTA", q: "¿Para qué se miran los datos en la Analítica Digital?", a: "Para aprender y pivotar, no solo para celebrar.", options: ["Solo para mostrarle al jefe.", "Para despedir al Community Manager.", "Para aprender y pivotar, no solo para celebrar."], correct: 2 },
+            { topic: "Arquetipos Jung", q: "Psicólogo que propuso los 12 Arquetipos de Marca utilizados en Marketing:", a: "Carl Jung.", options: ["Carl Jung.", "Sigmund Freud.", "Philip Kotler."], correct: 0 },
+            { topic: "Arquetipos Jung", q: "Arquetipo colaborativo que encarna las virtudes de la gente común:", a: "El Amigo.", options: ["El Cuidador.", "El Sabio.", "El Amigo."], correct: 2 },
+            { topic: "Arquetipos Jung", q: "Arquetipo inconformista que transforma ideas en productos únicos:", a: "El Creador.", options: ["El Creador.", "El Mago.", "El Hacedor."], correct: 0 },
+            { topic: "Arquetipos Jung", q: "Arquetipo que representa la aventura, la libertad y busca lo nuevo:", a: "El Explorador.", options: ["El Explorador.", "El Destructor.", "El Héroe."], correct: 0 },
+            { topic: "Arquetipos Jung", q: "Arquetipo motivado por la valentía, que inspira a superar desafíos:", a: "El Héroe.", options: ["El Amante.", "El Héroe.", "El Rebelde."], correct: 1 },
+            { topic: "Arquetipos Jung", q: "Arquetipo que desafía convenciones y lucha contra la opresión:", a: "El Rebelde.", options: ["El Sabio.", "El Bromista.", "El Rebelde."], correct: 2 },
+            { topic: "Arquetipos Jung", q: "Arquetipo que busca la verdad para iluminar a otros con su conocimiento:", a: "El Sabio.", options: ["El Sabio.", "El Amigo.", "El Mago."], correct: 0 },
+            { topic: "Arquetipos Jung", q: "Arquetipo que inspira conexión emocional, sensualidad y pasión:", a: "El Amante.", options: ["El Amante.", "El Bromista.", "El Cuidador."], correct: 0 },
+            { topic: "Arquetipos Jung", q: "Arquetipo centrado en el servicio, la empatía y la generosidad:", a: "El Cuidador.", options: ["El Cuidador.", "El Hacedor.", "El Creador."], correct: 0 },
+            { topic: "Arquetipos Jung", q: "Arquetipo orientado a la acción, valora la eficiencia al hacer realidades:", a: "El Hacedor.", options: ["El Mago.", "El Hacedor.", "El Destructor."], correct: 1 },
+            { topic: "Arquetipos Jung", q: "Arquetipo que busca la diversión, la ligereza y el humor en la vida:", a: "El Bromista.", options: ["El Amigo.", "El Bromista.", "El Explorador."], correct: 1 },
+            { topic: "Arquetipos Jung", q: "Arquetipo que cuestiona el status quo mediante la disrupción total:", a: "El Destructor.", options: ["El Destructor.", "El Rebelde.", "El Héroe."], correct: 0 },
+            { topic: "Arquetipos Jung", q: "Arquetipo maestro del conocimiento que usa la 'magia' para cambiar cosas:", a: "El Mago.", options: ["El Sabio.", "El Creador.", "El Mago."], correct: 2 },
+            { topic: "Inteligencia Artificial", q: "¿Qué es la Inteligencia Artificial (IA)?", a: "Tecnología que realiza tareas que normalmente requieren inteligencia humana.", options: ["Robots físicos que dominan el mundo.", "Tecnología que realiza tareas que normalmente requieren inteligencia humana.", "Un virus informático muy avanzado."], correct: 1 },
+            { topic: "Inteligencia Artificial", q: "¿Qué país organizó el Foro Global sobre la Ética de la IA en 2024?", a: "Eslovenia.", options: ["Estados Unidos.", "Japón.", "Eslovenia."], correct: 2 },
+            { topic: "Inteligencia Artificial", q: "¿Cuál es el documento de Política Pública de Colombia sobre IA a 2030?", a: "El CONPES.", options: ["El Tratado Libre de Comercio.", "La Ley de Protección de Datos.", "El CONPES."], correct: 2 },
+            { topic: "Inteligencia Artificial", q: "¿En el foro de la UNESCO se lanzó un Observatorio Global en alianza con?", a: "El Instituto Alan Turing y la ITU.", options: ["Meta y OpenAI.", "El Instituto Alan Turing y la ITU.", "La NASA."], correct: 1 },
+            { topic: "Inteligencia Artificial", q: "¿Para qué sirve el Readiness Assessment Methodology (RAM) de la UNESCO?", a: "Para evaluar reformas legales y sociales sobre IA en países.", options: ["Para medir la velocidad del internet.", "Para evaluar reformas legales y sociales sobre IA en países.", "Para saber cuántos robots tiene un país."], correct: 1 },
+            { topic: "Inteligencia Artificial", q: "¿Cuál es el objetivo principal de la Política Pública de IA en Colombia?", a: "Generar capacidades para desarrollo ético e impulsar la economía.", options: ["Generar capacidades para desarrollo ético e impulsar la economía.", "Prohibir el uso de ChatGPT en colegios.", "Crear una criptomoneda nacional."], correct: 0 },
+            { topic: "Herramientas IA", q: "¿Qué chatbot de IA fue desarrollado por la empresa OpenAI?", a: "ChatGPT.", options: ["Copilot.", "Gemini.", "ChatGPT."], correct: 2 },
+            { topic: "Herramientas IA", q: "¿Qué chatbot está integrado en herramientas de Office y fue creado por Microsoft?", a: "Copilot.", options: ["Claude.", "Copilot.", "LeChat."], correct: 1 },
+            { topic: "Herramientas IA", q: "Chatbot creado por Google, caracterizado por ser multimodal:", a: "Gemini.", options: ["Gemini.", "DeepSeek.", "Grok."], correct: 0 },
+            { topic: "Herramientas IA", q: "Chatbot de la empresa Anthropic, enfocado en seguridad y ética:", a: "Claude.", options: ["ChatGPT.", "Claude.", "Qwen."], correct: 1 },
+            { topic: "Herramientas IA", q: "¿Qué chatbot chino es conocido por ser potente en código y rentable?", a: "DeepSeek.", options: ["Qwen.", "LeChat.", "DeepSeek."], correct: 2 },
+            { topic: "Herramientas IA", q: "Chatbot de xAI inspirado en un enfoque rebelde, directo y crítico:", a: "Grok.", options: ["Grok.", "ChatGPT.", "Copilot."], correct: 0 },
+            { topic: "Herramientas IA", q: "Directorio web con más de 1450 opciones de IA categorizadas:", a: "Evolupedia.", options: ["Google.", "Wikipedia.", "Evolupedia."], correct: 2 },
+            { topic: "Herramientas IA", q: "Canal de YouTube recomendado que explica la IA de forma práctica y accesible:", a: "Dot CSV.", options: ["Dot CSV.", "Luisito Comunica.", "El Rubius."], correct: 0 },
+            { topic: "Prompts IA", q: "¿Qué es un Prompt en Inteligencia Artificial?", a: "Instrucción dada a la IA para que genere contenido.", options: ["Instrucción dada a la IA para que genere contenido.", "El botón de apagado del sistema.", "Un virus informático indetectable."], correct: 0 },
+            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Rol'?", a: "Quién es la IA en ese momento (ej. 'Eres un experto en...').", options: ["El idioma del texto.", "Quién es la IA en ese momento (ej. 'Eres un experto en...').", "El número de palabras a escribir."], correct: 1 },
+            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Tarea'?", a: "Qué tiene que hacer específicamente la IA.", options: ["A quién va dirigido el mensaje.", "El formato del archivo final.", "Qué tiene que hacer específicamente la IA."], correct: 2 },
+            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Público'?", a: "Para quién va dirigido el texto o respuesta.", options: ["Quién escribe el prompt.", "Para quién va dirigido el texto o respuesta.", "El canal de YouTube donde se publicará."], correct: 1 },
+            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Tono'?", a: "Cómo debe sonar la respuesta (ej. entusiasta, formal).", options: ["Cómo debe sonar la respuesta (ej. entusiasta, formal).", "El volumen de la voz en un video.", "El color de la página web."], correct: 0 },
+            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Formato'?", a: "Cómo debe presentarse la respuesta (ej. tabla, párrafo).", options: ["La fecha de entrega del trabajo.", "Cómo debe presentarse la respuesta (ej. tabla, párrafo).", "Si es gratis o de pago."], correct: 1 },
+            { topic: "Social Listening", q: "¿Qué es el Social Listening?", a: "Monitorizar y analizar menciones sobre una marca en canales digitales.", options: ["Escuchar música en Spotify con amigos.", "Monitorizar y analizar menciones sobre una marca en canales digitales.", "Crear anuncios en la radio."], correct: 1 },
+            { topic: "Social Listening", q: "Fase del Social Listening donde se recopila información en redes o blogs:", a: "Monitorización.", options: ["Decisiones.", "Monitorización.", "Análisis."], correct: 1 },
+            { topic: "Social Listening", q: "¿Cómo ayuda el Social Listening a la reputación de la marca?", a: "Permite responder rápidamente a críticas o comentarios negativos.", options: ["Genera seguidores falsos automáticamente.", "Censura los comentarios malos de la web.", "Permite responder rápidamente a críticas o comentarios negativos."], correct: 2 },
+            { topic: "Social Listening", q: "¿Qué herramienta es famosa por evaluar empresas según la voz del consumidor (reseñas)?", a: "Trustpilot.", options: ["Microsoft Word.", "Trustpilot.", "Google Maps."], correct: 1 },
+            { topic: "Social Listening", q: "¿Cuál de las siguientes es una herramienta de Social Listening mencionada en clase?", a: "Brand24.", options: ["Netflix.", "Brand24.", "Canva."], correct: 1 }
+        ];
+
+        const playerColors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#a855f7", "#ec4899", "#06b6d4", "#eab308", "#ffffff", "#6366f1"];
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        // Gestor de Interfaz
+        const ui = {
+            players: [],
+            addPlayer() {
+                const input = document.getElementById('player-input');
+                const name = input.value.trim();
+                if (name && this.players.length < 10) {
+                    this.players.push({ name, color: playerColors[this.players.length] });
+                    input.value = '';
+                    this.renderSetupList();
+                }
+            },
+            removePlayer(index) {
+                this.players.splice(index, 1);
+                this.players.forEach((p, i) => p.color = playerColors[i]);
+                this.renderSetupList();
+            },
+            renderSetupList() {
+                const list = document.getElementById('setup-player-list');
+                const btn = document.getElementById('btn-play');
+                const info = document.getElementById('player-count-info');
+                list.innerHTML = this.players.map((p, i) => `
+                    <div class="px-3 py-1.5 md:px-5 md:py-2.5 rounded-full text-xs md:text-lg font-bold border flex items-center gap-2 md:gap-3 transition-transform hover:scale-105" style="border-color: ${p.color}; color: ${p.color}; background: ${p.color}11">
+                        <i class="fas fa-user"></i> ${p.name.toUpperCase()}
+                        <button type="button" onclick="ui.removePlayer(${i})" class="w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center bg-slate-900 hover:bg-red-500 hover:text-white border border-transparent hover:border-red-400 transition-colors" title="Eliminar participante">
+                            <i class="fas fa-times text-xs md:text-sm"></i>
+                        </button>
+                    </div>
+                `).join('');
+                btn.disabled = this.players.length === 0;
+                info.innerText = `Participantes: ${this.players.length} / 10`;
+            },
+            async startGame() {
+                const startScreen = document.getElementById('start-screen');
+                
+                // Fade out inicial suave
+                startScreen.style.opacity = '0';
+                startScreen.style.transform = 'translateY(-20px) scale(0.95)';
+                
+                setTimeout(async () => {
+                    startScreen.style.display = 'none';
+                    const gameContainer = document.getElementById('game-container');
+                    gameContainer.style.display = 'flex';
+                    
+                    void gameContainer.offsetWidth; // Reflow
+                    gameContainer.style.opacity = '1';
+                    
+                    window.game = new Game(this.players);
+                    
+                    if (window.saveParticipantToDB) {
+                        for (const p of this.players) { window.saveParticipantToDB(p.name, 1); }
+                    }
+
+                    await window.game.announceTurn(); 
+                }, 800);
+            }
+        };
+
+        // Motor de Audio Combinado: Radio Streaming + Efectos de Web API (Tic-Tac)
+        const audioManager = {
+            ctx: null,
+            isMuted: true,
+            radioStream: null,
+
+            init() {
+                // Iniciar motor de efectos "TAC"
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                
+                // Enlazar radio streaming
+                if (!this.radioStream) {
+                    this.radioStream = document.getElementById('radio-stream');
+                    this.radioStream.volume = document.getElementById('volume-slider').value;
+                }
+            },
+
+            toggleAudio() {
+                this.isMuted = !this.isMuted;
+                const icon = document.getElementById('audio-icon');
+                const btn = document.getElementById('audio-toggle-btn');
+                
+                this.init(); // Asegura instanciar audio context y radio
+
+                if (this.isMuted) {
+                    // Silenciar y pausar todo
+                    icon.className = 'fas fa-volume-mute';
+                    btn.classList.remove('text-white', 'bg-indigo-600', 'border-indigo-400');
+                    btn.classList.add('text-slate-400', 'bg-slate-800', 'border-slate-600');
+                    if (this.radioStream) this.radioStream.pause();
+                } else {
+                    // Activar radio y efectos
+                    icon.className = 'fas fa-broadcast-tower animate-pulse'; 
+                    btn.classList.remove('text-slate-400', 'bg-slate-800', 'border-slate-600');
+                    btn.classList.add('text-white', 'bg-indigo-600', 'border-indigo-400');
+                    
+                    if (this.radioStream) {
+                        this.radioStream.play().catch(e => console.log("Streaming bloqueado temporalmente por navegador:", e));
+                    }
+                    this.playTic(false); // Prueba de activación
+                }
+            },
+
+            setVolume(val) {
+                if (this.radioStream) {
+                    this.radioStream.volume = val;
+                }
+            },
+
+            playTic(isUrgent = false) {
+                if (!this.ctx || this.isMuted) return;
+
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                // Sonido "TAC" seco (no interfiere con la música)
+                osc.type = isUrgent ? 'square' : 'triangle'; 
+                osc.frequency.setValueAtTime(isUrgent ? 800 : 400, t);
+                osc.frequency.exponentialRampToValueAtTime(isUrgent ? 400 : 200, t + 0.1);
+
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.2, t + 0.02); 
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start(t);
+                osc.stop(t + 0.1);
+            }
+        };
+
+        class Game {
+            constructor(participants) {
+                this.players = participants.map((p, idx) => ({ id: idx + 1, name: p.name, color: p.color, pos: 1, maxPos: 1 }));
+                this.currentPlayerIdx = 0;
+                this.isMoving = true; 
+                this.isFirstTurn = true; 
+                this.specialSettings = { ladders: {}, traps: {}, boost: [] };
+                this.specialPaths = {}; 
+                
+                this.usedQuestions = new Set();
+                this.lastTopic = null;
+                this.timerInterval = null;
+                this.turnTimerInterval = null; 
+                this.extraTurnEarned = false;
+
+                this.init();
+            }
+
+            init() {
+                this.randomizeSpecials();
+                this.renderBoard();
+                this.renderPlayers();
+                this.updateUI();
+                
+                const resizeObserver = new ResizeObserver(() => {
+                    this.renderPlayers();
+                    this.drawConnections();
+                });
+                resizeObserver.observe(document.getElementById('game-board'));
+
+                window.addEventListener('resize', () => {
+                    this.renderPlayers();
+                    this.drawConnections();
+                });
+            }
+
+            async announceTurn() {
+                const p = this.players[this.currentPlayerIdx];
+                let titleStr = "Turno de";
+                let nameStr = p.name;
+                let iconStr = "fa-user-circle";
+
+                if (this.players.length === 1) {
+                    if (this.isFirstTurn) {
+                        titleStr = "INICIA EL JUEGO";
+                        nameStr = "LANZA EL DADO";
+                        iconStr = "fa-play-circle";
+                    } else {
+                        titleStr = "CONTINÚA";
+                        nameStr = "JUGANDO";
+                        iconStr = "fa-forward";
+                    }
+                }
+
+                const html = `
+                    <div class="bg-slate-900 border-2 rounded-[2rem] p-8 md:p-12 shadow-2xl text-center" style="border-color: ${p.color}; background: linear-gradient(135deg, rgba(15,23,42,1) 0%, ${p.color}15 100%);">
+                        <div class="text-6xl md:text-7xl mb-4 md:mb-6" style="color: ${p.color}"><i class="fas ${iconStr}"></i></div>
+                        <h2 class="text-2xl md:text-3xl font-black text-white mb-2 md:mb-4 uppercase tracking-widest">${titleStr}</h2>
+                        <div class="text-4xl md:text-6xl font-black uppercase break-words leading-tight" style="color: ${p.color}; text-shadow: 0 0 25px ${p.color}66">${nameStr}</div>
+                    </div>
+                `;
+                
+                this.isFirstTurn = false;
+
+                await this.updateModalContent(html);
+                this.toggleModal(true);
+                await sleep(3000);
+                this.toggleModal(false);
+                await sleep(600);
+                this.isMoving = false; 
+                this.startTurnTimer(); 
+            }
+
+            startTurnTimer() {
+                if (this.players.length === 1) return; // Si es 1 jugador, no hay límite de tiempo
+
+                const display = document.getElementById('turn-timer-display');
+                const timeLeftSpan = document.getElementById('turn-time-left');
+                display.classList.remove('hidden');
+                
+                let time = 20;
+                timeLeftSpan.innerText = time;
+                timeLeftSpan.classList.remove('text-red-500', 'animate-ping');
+                
+                clearInterval(this.turnTimerInterval);
+                this.turnTimerInterval = setInterval(() => {
+                    time--;
+                    timeLeftSpan.innerText = time;
+                    
+                    if (time <= 5 && time > 0) {
+                        timeLeftSpan.classList.add('text-red-500', 'animate-ping');
+                        audioManager.playTic(true); // Tic agudo y urgente (últimos 5 seg)
+                    } else if (time > 0) {
+                        audioManager.playTic(false); // Tic normal de reloj
+                    }
+
+                    if (time <= 0) {
+                        this.stopTurnTimer();
+                        this.handleTimeOutTurn();
+                    }
+                }, 1000); // 1 sonido cada 1 segundo exacto
+            }
+
+            stopTurnTimer() {
+                clearInterval(this.turnTimerInterval);
+                this.turnTimerInterval = null; 
+                document.getElementById('turn-timer-display').classList.add('hidden');
+            }
+
+            async handleTimeOutTurn() {
+                this.isMoving = true; 
+                const html = `
+                    <div class="bg-slate-900 border-2 border-red-500 rounded-[2rem] p-8 md:p-12 shadow-2xl text-center" style="background: linear-gradient(135deg, rgba(15,23,42,1) 0%, rgba(239, 68, 68, 0.15) 100%);">
+                        <div class="text-6xl md:text-7xl mb-4 md:mb-6 text-red-500 animate-pulse"><i class="fas fa-hourglass-end"></i></div>
+                        <h2 class="text-3xl md:text-5xl font-black text-white mb-2 md:mb-4 uppercase tracking-tighter">¡TIEMPO AGOTADO!</h2>
+                        <p class="text-xl md:text-3xl text-slate-300 font-bold">Has perdido tu turno por inactividad.</p>
+                    </div>`;
+                await this.updateModalContent(html); 
+                this.toggleModal(true); 
+                await sleep(3500); 
+                this.toggleModal(false); 
+                await sleep(600);
+                this.endTurn();
+            }
+
+            pickGlobalQuestion() {
+                let candidates = questionsDB.map((q, idx) => ({ ...q, idx })).filter(q => !this.usedQuestions.has(q.idx));
+                if (candidates.length === 0) {
+                    this.usedQuestions.clear();
+                    candidates = questionsDB.map((q, idx) => ({ ...q, idx }));
+                }
+                
+                let finalPool = candidates.filter(q => q.topic !== this.lastTopic);
+                if (finalPool.length === 0) finalPool = candidates;
+                
+                const selected = finalPool[Math.floor(Math.random() * finalPool.length)];
+                this.usedQuestions.add(selected.idx);
+                this.lastTopic = selected.topic;
+                return selected;
+            }
+
+            randomizeSpecials() {
+                const occupied = this.players.map(p => p.pos);
+                this.specialSettings = { ladders: {}, traps: {}, boost: [] };
+                
+                const lowerHalf = Array.from({ length: 14 }, (_, i) => i + 2).filter(c => !occupied.includes(c)); 
+                const upperHalf = Array.from({ length: 14 }, (_, i) => i + 16).filter(c => !occupied.includes(c)); 
+
+                const shuffle = (array) => {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                };
+                shuffle(lowerHalf);
+                shuffle(upperHalf);
+
+                while (Object.keys(this.specialSettings.ladders).length < 2 && lowerHalf.length) {
+                    const s = lowerHalf.pop(); this.specialSettings.ladders[s] = Math.min(s + Math.floor(Math.random() * 4 + 3), 29);
+                }
+                while (Object.keys(this.specialSettings.traps).length < 2 && lowerHalf.length) {
+                    const s = lowerHalf.pop(); this.specialSettings.traps[s] = Math.max(s - Math.floor(Math.random() * 4 + 3), 1);
+                }
+                
+                while (Object.keys(this.specialSettings.ladders).length < 3 && upperHalf.length) { 
+                    const s = upperHalf.pop(); this.specialSettings.ladders[s] = Math.min(s + Math.floor(Math.random() * 3 + 2), 29); 
+                }
+                while (Object.keys(this.specialSettings.traps).length < 8 && upperHalf.length) { 
+                    const s = upperHalf.pop(); 
+                    this.specialSettings.traps[s] = Math.max(s - Math.floor(Math.random() * 7 + 6), 1); 
+                }
+
+                if (this.players.length > 1) {
+                    while (this.specialSettings.boost.length < 1 && lowerHalf.length) {
+                        this.specialSettings.boost.push(lowerHalf.pop());
+                    }
+                    while (this.specialSettings.boost.length < 2 && upperHalf.length) {
+                        this.specialSettings.boost.push(upperHalf.pop());
+                    }
+                }
+            }
+
+            renderBoard() {
+                const board = document.getElementById('game-board');
+                board.innerHTML = '';
+                for (let i = 1; i <= 30; i++) {
+                    let cell = document.getElementById(`cell-${i}`);
+                    let iconContainer;
+
+                    if (!cell) {
+                        cell = document.createElement('div');
+                        cell.id = `cell-${i}`;
+                        if (i === 30) {
+                            cell.innerHTML = '<i class="fas fa-trophy text-3xl md:text-5xl"></i>';
+                        } else {
+                            cell.innerHTML = `<span>${i}</span><div class="icon-container absolute top-1 right-1 md:top-2 md:right-2 transition-opacity duration-700 opacity-0"></div>`;
+                        }
+                        board.appendChild(cell);
+                    }
+
+                    cell.className = 'cell';
+                    if (i === 30) {
+                        cell.classList.add('cell-winner');
+                        continue;
+                    }
+
+                    iconContainer = cell.querySelector('.icon-container');
+
+                    if (this.specialSettings.ladders[i]) {
+                        cell.classList.add('cell-special-up');
+                        iconContainer.innerHTML = '<i class="fas fa-chevron-circle-up text-xs md:text-base text-emerald-400"></i>';
+                        iconContainer.style.opacity = '1';
+                    } else if (this.specialSettings.traps[i]) {
+                        cell.classList.add('cell-special-down');
+                        iconContainer.innerHTML = '<i class="fas fa-exclamation-triangle text-xs md:text-base text-red-400"></i>';
+                        iconContainer.style.opacity = '1';
+                    } else if (this.specialSettings.boost.includes(i)) {
+                        cell.classList.add('cell-special-orange');
+                        iconContainer.innerHTML = '<i class="fas fa-bolt text-xs md:text-base text-orange-400"></i>';
+                        iconContainer.style.opacity = '1';
+                    } else {
+                        iconContainer.style.opacity = '0';
+                    }
+                }
+                
+                setTimeout(() => this.drawConnections(), 50);
+            }
+            
+            drawConnections() {
+                const container = document.getElementById('svg-container');
+                const board = document.getElementById('game-board');
+                if (!container || !board) return;
+                
+                const boardRect = board.getBoundingClientRect();
+                if (boardRect.width === 0) return; 
+                
+                let svgHTML = `
+                <svg width="100%" height="100%" style="position:absolute; top:0; left:0; overflow:visible;">
+                    <defs>
+                        <filter id="neon-glow-green" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        <filter id="neon-glow-red" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        
+                        <marker id="vector-target-green" viewBox="0 0 24 24" refX="12" refY="12" markerWidth="20" markerHeight="20" orient="auto">
+                            <circle cx="12" cy="12" r="7" fill="none" stroke="#4ade80" stroke-width="2" filter="url(#neon-glow-green)" />
+                            <circle cx="12" cy="12" r="3" fill="#4ade80" filter="url(#neon-glow-green)" />
+                        </marker>
+                        
+                        <marker id="vector-target-red" viewBox="0 0 24 24" refX="12" refY="12" markerWidth="20" markerHeight="20" orient="auto">
+                            <circle cx="12" cy="12" r="7" fill="none" stroke="#f87171" stroke-width="2" filter="url(#neon-glow-red)" />
+                            <circle cx="12" cy="12" r="3" fill="#f87171" filter="url(#neon-glow-red)" />
+                        </marker>
+                    </defs>`;
+
+                const drawnControls = [];
+
+                const addLine = (start, end, type) => {
+                    const startCell = document.getElementById(`cell-${start}`);
+                    const endCell = document.getElementById(`cell-${end}`);
+                    if(!startCell || !endCell) return;
+                    
+                    const sr = startCell.getBoundingClientRect();
+                    const er = endCell.getBoundingClientRect();
+                    
+                    const x1 = sr.left - boardRect.left + sr.width / 2;
+                    const y1 = sr.top - boardRect.top + sr.height / 2;
+                    const x2 = er.left - boardRect.left + er.width / 2;
+                    const y2 = er.top - boardRect.top + er.height / 2;
+
+                    const dx = x2 - x1;
+                    const dy = y2 - y1;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    const nx = -dy / dist;
+                    const ny = dx / dist;
+
+                    const baseOffset = Math.min(120, Math.max(50, dist * 0.25));
+                    let side = type === 'ladder' ? 1 : -1;
+                    let cx1, cy1, cx2, cy2;
+                    let currentOffset = baseOffset;
+                    let attempts = 0;
+
+                    while (attempts < 5) {
+                        cx1 = x1 + dx * 0.33 + nx * currentOffset * side;
+                        cy1 = y1 + dy * 0.33 + ny * currentOffset * side;
+
+                        cx2 = x1 + dx * 0.66 - nx * currentOffset * side;
+                        cy2 = y1 + dy * 0.66 - ny * currentOffset * side;
+
+                        let isOverlapping = drawnControls.some(pt => {
+                            const pDist1 = Math.sqrt(Math.pow(cx1 - pt.x, 2) + Math.pow(cy1 - pt.y, 2));
+                            const pDist2 = Math.sqrt(Math.pow(cx2 - pt.x, 2) + Math.pow(cy2 - pt.y, 2));
+                            return pDist1 < 65 || pDist2 < 65; 
+                        });
+
+                        if (!isOverlapping) break;
+
+                        currentOffset += 50; 
+                        if (attempts === 2) {
+                            side *= -1;
+                            currentOffset = baseOffset + 30;
+                        }
+                        attempts++;
+                    }
+
+                    drawnControls.push({x: cx1, y: cy1}, {x: cx2, y: cy2});
+
+                    const pathData = `M ${x1} ${y1} C ${cx1} ${cy1} ${cx2} ${cy2} ${x2} ${y2}`;
+
+                    if (type === 'ladder') {
+                        svgHTML += `<path d="${pathData}" fill="none" stroke="#22c55e" stroke-width="8" opacity="0.3" filter="url(#neon-glow-green)" />`;
+                        svgHTML += `<path d="${pathData}" class="dash-anim-vector" fill="none" stroke="#4ade80" stroke-width="4" stroke-dasharray="15, 15" stroke-linecap="round" marker-end="url(#vector-target-green)" />`;
+                    } else {
+                        svgHTML += `<path d="${pathData}" fill="none" stroke="#b91c1c" stroke-width="8" opacity="0.3" filter="url(#neon-glow-red)" />`;
+                        svgHTML += `<path d="${pathData}" class="dash-anim-vector" fill="none" stroke="#f87171" stroke-width="4" stroke-dasharray="15, 15" stroke-linecap="round" marker-end="url(#vector-target-red)" />`;
+                    }
+                };
+
+                for (const [start, end] of Object.entries(this.specialSettings.ladders)) { addLine(start, end, 'ladder'); }
+                for (const [start, end] of Object.entries(this.specialSettings.traps)) { addLine(start, end, 'trap'); }
+                
+                svgHTML += `</svg>`;
+                container.innerHTML = svgHTML; 
+            }
+
+            renderPlayers() {
+                const occupancy = {};
+                this.players.forEach(p => { occupancy[p.pos] = (occupancy[p.pos] || 0) + 1; });
+                const currentCellCounts = {};
+
+                const isMobile = window.innerWidth < 768;
+                const pawnSize = isMobile ? 28 : 42; 
+                const pawnHalf = pawnSize / 2;
+
+                this.players.forEach((p) => {
+                    let pawn = document.getElementById(`pawn-${p.id}`);
+                    if (!pawn) {
+                        pawn = document.createElement('div');
+                        pawn.id = `pawn-${p.id}`;
+                        pawn.className = 'player-pawn';
+                        pawn.style.backgroundColor = p.color;
+                        pawn.innerText = p.id;
+                        pawn.style.transition = 'left 0.3s ease, top 0.3s ease'; 
+                        document.body.appendChild(pawn);
+                    }
+                    
+                    pawn.style.width = `${pawnSize}px`;
+                    pawn.style.height = `${pawnSize}px`;
+                    pawn.style.fontSize = isMobile ? '1rem' : '1.5rem'; 
+
+                    const totalInCell = occupancy[p.pos];
+                    const currentIndex = currentCellCounts[p.pos] || 0;
+                    currentCellCounts[p.pos] = currentIndex + 1;
+
+                    let offsetX = 0;
+                    let offsetY = 0;
+                    
+                    if (totalInCell > 1) {
+                        const radius = isMobile ? 12 : 22; 
+                        const angle = (currentIndex / totalInCell) * 2 * Math.PI;
+                        offsetX = Math.cos(angle) * radius;
+                        offsetY = Math.sin(angle) * radius;
+                    }
+                    
+                    this.positionPawnDirectly(p, pawnHalf, offsetX, offsetY);
+                });
+            }
+
+            positionPawnDirectly(player, pawnHalf, offsetX = 0, offsetY = 0) {
+                const cell = document.getElementById(`cell-${player.pos}`);
+                if (!cell) return;
+                const rect = cell.getBoundingClientRect();
+                const pawn = document.getElementById(`pawn-${player.id}`);
+                
+                pawn.style.transition = 'left 0.3s ease, top 0.3s ease';
+                pawn.style.top = `${window.scrollY + rect.top + rect.height/2 - pawnHalf + offsetY}px`;
+                pawn.style.left = `${window.scrollX + rect.left + rect.width/2 - pawnHalf + offsetX}px`;
+            }
+
+            async positionPawnWithJump(player, pawnHalf, offsetX = 0, offsetY = 0) {
+                const cell = document.getElementById(`cell-${player.pos}`);
+                if (!cell) return;
+                const rect = cell.getBoundingClientRect();
+                const pawn = document.getElementById(`pawn-${player.id}`);
+                
+                const currentLeft = parseFloat(pawn.style.left);
+                const currentTop = parseFloat(pawn.style.top);
+                
+                const targetLeft = window.scrollX + rect.left + rect.width/2 - pawnHalf + offsetX;
+                const targetTop = window.scrollY + rect.top + rect.height/2 - pawnHalf + offsetY;
+
+                if (isNaN(currentLeft) || isNaN(currentTop)) {
+                    pawn.style.left = `${targetLeft}px`;
+                    pawn.style.top = `${targetTop}px`;
+                    return;
+                }
+
+                pawn.style.transition = 'none';
+
+                const midX = (currentLeft + targetLeft) / 2;
+                const midY = Math.min(currentTop, targetTop) - 45; 
+
+                const animation = pawn.animate([
+                    { left: `${currentLeft}px`, top: `${currentTop}px`, transform: 'scale(1)' },
+                    { left: `${midX}px`, top: `${midY}px`, transform: 'scale(1.25)' }, 
+                    { left: `${targetLeft}px`, top: `${targetTop}px`, transform: 'scale(1)' }
+                ], {
+                    duration: 450, 
+                    easing: 'ease-in-out',
+                });
+
+                await animation.finished;
+
+                pawn.style.left = `${targetLeft}px`;
+                pawn.style.top = `${targetTop}px`;
+            }
+
+            updateUI(fade = false) {
+                const current = this.players[this.currentPlayerIdx];
+                let displayName = current.name.toUpperCase();
+                if (this.players.length === 1) displayName = "JUGANDO";
+
+                const turnDisplay = document.getElementById('turn-display');
+                const statusDot = document.getElementById('status-dot');
+
+                if (fade) {
+                    turnDisplay.style.opacity = '0';
+                    statusDot.style.opacity = '0';
+                    setTimeout(() => {
+                        turnDisplay.innerText = `TURNO: ${displayName} — Casilla ${current.pos}`;
+                        statusDot.style.backgroundColor = current.color;
+                        turnDisplay.style.opacity = '1';
+                        statusDot.style.opacity = '1';
+                    }, 400); 
+                } else {
+                    turnDisplay.innerText = `TURNO: ${displayName} — Casilla ${current.pos}`;
+                    statusDot.style.backgroundColor = current.color;
+                }
+            }
+
+            rollDice() {
+                if (this.isMoving) return;
+                this.isMoving = true;
+                this.stopTurnTimer(); 
+
+                const dice = document.getElementById('dice-visual');
+                dice.classList.add('dice-rolling');
+                setTimeout(() => {
+                    const res = Math.floor(Math.random() * 6) + 1;
+                    const icons = ["fa-dice-one", "fa-dice-two", "fa-dice-three", "fa-dice-four", "fa-dice-five", "fa-dice-six"];
+                    dice.innerHTML = `<i class="fas ${icons[res-1]}"></i>`;
+                    dice.classList.remove('dice-rolling');
+                    this.askQuestion(res, Math.min(this.players[this.currentPlayerIdx].pos + res, 30));
+                }, 1000);
+            }
+
+            toggleModal(show) {
+                const m = document.getElementById('modal');
+                if (show) m.classList.add('active'); else m.classList.remove('active');
+            }
+
+            async updateModalContent(html) {
+                const c = document.getElementById('modal-content');
+                c.style.opacity = '0'; 
+                await sleep(500); 
+                c.innerHTML = html; 
+                c.style.opacity = '1'; 
+                await sleep(500);
+            }
+
+            startTimer(onTimeout) {
+                let time = 20;
+                const timerVal = document.getElementById('timer-val');
+                
+                clearInterval(this.timerInterval); 
+                this.timerInterval = setInterval(() => {
+                    time--; 
+                    timerVal.innerText = time;
+                    
+                    if (time <= 5 && time > 0) {
+                        timerVal.parentElement.classList.add('timer-critical');
+                        audioManager.playTic(true); 
+                    } else if (time > 0) {
+                        audioManager.playTic(false); 
+                    }
+
+                    if (time <= 0) { 
+                        clearInterval(this.timerInterval); 
+                        onTimeout(); 
+                    }
+                }, 1000);
+            }
+
+            askQuestion(roll, target) {
+                return new Promise((resolve) => {
+                    const q = this.pickGlobalQuestion();
+                    const p = this.players[this.currentPlayerIdx];
+                    const opts = q.options.map((o, i) => ({ text: o, isCorrect: i === q.correct }));
+                    opts.sort(() => Math.random() - 0.5);
+
+                    const html = `
+                        <div class="bg-slate-900 border-2 border-indigo-500/40 rounded-[2rem] p-6 md:p-10 shadow-2xl">
+                            <div class="flex items-center justify-between mb-6 md:mb-8">
+                                <div class="flex items-center gap-3 md:gap-5">
+                                <div class="h-12 w-12 md:h-16 md:w-16 bg-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center text-xl md:text-3xl"><i class="fas fa-brain text-white"></i></div>
+                                <h3 class="text-xl md:text-3xl font-black text-white uppercase">${q.topic}</h3>
+                            </div>
+                            <div class="flex gap-2">
+                                <div id="timer-box" class="font-black text-lg md:text-2xl text-blue-400"><i class="fas fa-clock"></i> <span id="timer-val">20</span></div>
+                            </div>
+                        </div>
+                        <div class="mb-4 text-right">
+                            <span class="bg-indigo-600/50 px-3 py-1.5 md:px-5 md:py-2.5 rounded-lg md:rounded-xl font-black text-white text-xs md:text-sm border border-indigo-400/30">META: ${target}</span>
+                        </div>
+                        <p class="text-2xl md:text-4xl text-white mb-8 md:mb-10 leading-snug font-black drop-shadow-lg">${q.q}</p>
+                        <div id="opts-grid" class="grid gap-2 md:gap-4 mb-6 md:mb-8">
+                            ${opts.map(o => `<button class="opt-btn p-4 md:p-5 bg-slate-800/80 hover:bg-indigo-900/40 border border-slate-700 rounded-xl text-left transition-all font-bold text-base md:text-xl text-slate-200" data-correct="${o.isCorrect}">${o.text}</button>`).join('')}
+                        </div>
+                        <div id="feedback" class="hidden p-4 md:p-5 rounded-xl font-bold text-center border-2 text-base md:text-xl transition-opacity duration-700"></div>
+                    </div>
+                `;
+
+                this.updateModalContent(html).then(() => {
+                        this.startTimer(async () => {
+                            document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+                            const fb = document.getElementById('feedback');
+                            fb.innerHTML = '¡TIEMPO AGOTADO!'; 
+                            fb.className = "p-4 md:p-5 rounded-xl font-bold text-center bg-red-500/10 text-red-400 border-red-500/50 block text-base md:text-xl transition-opacity duration-700";
+                            fb.style.opacity = '0';
+                            fb.classList.remove('hidden');
+                            void fb.offsetWidth; 
+                            fb.style.opacity = '1'; 
+                            
+                            await sleep(2500); 
+                            this.toggleModal(false); await sleep(600); this.endTurn(); resolve();
+                        });
+                    });
+                    this.toggleModal(true);
+
+                    document.getElementById('modal-content').onclick = async (e) => {
+                        const b = e.target.closest('.opt-btn');
+                        if (b) {
+                            clearInterval(this.timerInterval);
+                            const isCorr = b.dataset.correct === "true";
+                            document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
+                            const fb = document.getElementById('feedback');
+
+                            if (isCorr) {
+                                b.classList.add('bg-emerald-600/40', 'border-emerald-500', 'text-white');
+                                fb.innerHTML = '¡CORRECTO!'; 
+                                fb.className = "p-4 md:p-5 rounded-xl font-bold text-center bg-emerald-500/10 text-emerald-400 border-emerald-500/50 block text-base md:text-xl transition-opacity duration-700";
+                                fb.style.opacity = '0';
+                                fb.classList.remove('hidden');
+                                void fb.offsetWidth;
+                                fb.style.opacity = '1'; 
+
+                                await sleep(1500); 
+
+                                const adv = `
+                                    <div class="bg-slate-900 border-2 rounded-[2rem] p-8 md:p-12 shadow-2xl text-center" style="border-color: ${p.color}; background: linear-gradient(135deg, rgba(15,23,42,1) 0%, ${p.color}15 100%);">
+                                        <div class="text-6xl md:text-7xl mb-4 md:mb-6" style="color: ${p.color}"><i class="fas ${target===30?'fa-crown':'fa-rocket'}"></i></div>
+                                        <h2 class="text-3xl md:text-5xl font-black text-white mb-2 md:mb-4 uppercase tracking-tighter">¡Excelente!</h2>
+                                        <p class="text-xl md:text-2xl text-slate-300 font-bold mb-4 md:mb-6">Avanzas hasta la casilla</p>
+                                        <div class="text-7xl md:text-8xl font-black" style="color: ${p.color}; text-shadow: 0 0 25px ${p.color}66">${target === 30 ? '<i class="fas fa-trophy text-5xl md:text-6xl mr-3"></i> META' : target}</div>
+                                    </div>`;
+                                await this.updateModalContent(adv); await sleep(3000); this.toggleModal(false); await sleep(600); await this.moveSteps(target); resolve();
+                            } else {
+                                b.classList.add('bg-red-600/40', 'border-red-500', 'text-white');
+                                fb.innerHTML = 'INCORRECTO'; 
+                                fb.className = "p-4 md:p-5 rounded-xl font-bold text-center bg-red-500/10 text-red-400 border-red-500/50 block text-base md:text-xl transition-opacity duration-700";
+                                fb.style.opacity = '0';
+                                fb.classList.remove('hidden');
+                                void fb.offsetWidth;
+                                fb.style.opacity = '1'; 
+
+                                await sleep(2000); 
+                                this.toggleModal(false); await sleep(600); this.endTurn(); resolve();
+                            }
+                        }
+                    };
+                });
+            }
+
+            async moveSteps(target, visited = new Set()) {
+                const p = this.players[this.currentPlayerIdx];
+                const dir = target > p.pos ? 1 : -1;
+                
+                const isMobile = window.innerWidth < 768;
+                const pawnSize = isMobile ? 28 : 42; 
+                const pawnHalf = pawnSize / 2;
+
+                while (p.pos !== target) {
+                    p.pos += dir; 
+                    p.maxPos = Math.max(p.maxPos, p.pos); 
+                    
+                    await this.positionPawnWithJump(p, pawnHalf, 0, 0); 
+                    this.updateUI(false); 
+                }
+                
+                this.renderPlayers();
+                await this.checkSpecials(target, visited);
+            }
+
+            async checkSpecials(pos, visited = new Set()) {
+                const p = this.players[this.currentPlayerIdx];
+                if (pos === 30) { await this.celebrate(); return; }
+                
+                if (visited.has(pos)) { this.endTurn(); return; }
+                visited.add(pos);
+
+                if (this.specialSettings.boost.includes(pos)) {
+                    this.extraTurnEarned = true;
+                    const html = `
+                        <div class="bg-slate-900 border-2 border-orange-500 rounded-[2rem] p-8 md:p-12 shadow-2xl text-center" style="background: linear-gradient(135deg, rgba(15,23,42,1) 0%, rgba(249, 115, 22, 0.15) 100%);">
+                            <div class="text-6xl md:text-7xl mb-4 md:mb-6 text-orange-400"><i class="fas fa-bolt"></i></div>
+                            <h2 class="text-3xl md:text-5xl font-black text-white mb-2 md:mb-4 uppercase tracking-tighter">¡ZONA NARANJA!</h2>
+                            <p class="text-xl md:text-3xl text-slate-300 font-bold">Has ganado un <span class="text-orange-400">TIRO EXTRA</span></p>
+                        </div>`;
+                    await this.updateModalContent(html); this.toggleModal(true); await sleep(3000); this.toggleModal(false); await sleep(600);
+                    this.isMoving = false; 
+                    this.startTurnTimer(); 
+                    return;
+                }
+
+                let next = null; let msg = ""; let theme = "";
+                if (this.specialSettings.ladders[pos]) {
+                    next = this.specialSettings.ladders[pos]; msg = `¡ZONA VERDE!<br>Avanzas <span class="text-emerald-400">${next-pos}</span> casillas.`; theme = "#22c55e";
+                } else if (this.specialSettings.traps[pos]) {
+                    next = this.specialSettings.traps[pos]; msg = `¡ZONA ROJA!<br>Retrocedes <span class="text-red-400">${pos-next}</span> casillas.`; theme = "#ef4444";
+                }
+
+                if (next) {
+                    const html = `
+                        <div class="bg-slate-900 border-2 rounded-[2rem] p-8 md:p-12 shadow-2xl text-center" style="border-color: ${theme}; background: linear-gradient(135deg, rgba(15,23,42,1) 0%, ${theme}15 100%);">
+                            <div class="text-6xl md:text-7xl mb-4 md:mb-6" style="color:${theme}"><i class="fas ${theme==='#ef4444'?'fa-skull-crossbones':'fa-angle-double-up'}"></i></div>
+                            <h2 class="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-tight">${msg}</h2>
+                        </div>`;
+                    await this.updateModalContent(html); this.toggleModal(true); await sleep(3000); this.toggleModal(false); await sleep(600);
+                    
+                    await this.moveSteps(next, visited);
+                } else this.endTurn();
+            }
+
+            async endTurn() {
+                const p = this.players[this.currentPlayerIdx];
+                if (window.saveParticipantToDB) {
+                    window.saveParticipantToDB(p.name, p.maxPos);
+                }
+
+                if (!this.extraTurnEarned) {
+                    this.currentPlayerIdx = (this.currentPlayerIdx + 1) % this.players.length;
+                }
+                this.extraTurnEarned = false;
+                this.isMoving = true; 
+
+                const board = document.getElementById('game-board');
+                const svg = document.getElementById('svg-container');
+                board.style.opacity = '0';
+                svg.style.opacity = '0';
+
+                await sleep(600); 
+
+                this.randomizeSpecials();
+                this.renderBoard();
+                this.updateUI(true); 
+                
+                setTimeout(() => {
+                    board.style.opacity = '1';
+                    svg.style.opacity = '1';
+                }, 150);
+
+                await this.announceTurn(); 
+            }
+
+            async celebrate() {
+                const winner = this.players[this.currentPlayerIdx];
+                
+                if (window.saveParticipantToDB) {
+                    window.saveParticipantToDB(winner.name, 30);
+                }
+                
+                this.stopTurnTimer();
+
+                const end = Date.now() + (7 * 1000);
+                (function frame() {
+                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: [winner.color, '#FFD700'] });
+                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: [winner.color, '#FFD700'] });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+                
+                const html = `
+                    <div class="bg-slate-900 border-2 border-yellow-500 rounded-[2rem] p-8 md:p-12 shadow-2xl text-center" style="background: linear-gradient(135deg, rgba(15,23,42,1) 0%, rgba(234, 179, 8, 0.15) 100%);">
+                        <div class="mb-6 md:mb-8 animate-bounce"><i class="fas fa-trophy text-7xl md:text-8xl text-yellow-400" style="filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.6))"></i></div>
+                        <h3 class="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">¡FELICITACIONES!</h3>
+                        <p class="text-xl md:text-3xl font-black mb-8 md:mb-10 uppercase leading-tight" style="color: ${winner.color}">${winner.name} HA GANADO EL JUEGO</p>
+                        <button class="px-8 py-4 md:px-12 md:py-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl md:rounded-2xl font-black uppercase text-lg md:text-2xl transition-all shadow-xl hover:scale-105" onclick="location.reload()">REINICIAR DESAFÍO</button>
+                    </div>`;
+                await this.updateModalContent(html); this.toggleModal(true);
+            }
+        }
+        window.onresize = () => { if(window.game) window.game.renderPlayers(); };
+    </script>
+</body>
+</html>
