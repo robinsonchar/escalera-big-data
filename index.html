@@ -23,7 +23,6 @@
             position: relative;
         }
 
-        /* OPTIMIZACIÓN: Se agrandó el pseudo-elemento y se anima con transform (GPU) en lugar de background-position (CPU) */
         body::before {
             content: '';
             position: fixed;
@@ -44,7 +43,6 @@
             85.7% { background-color: #1e3a8a; }    
         }
 
-        /* Animación suave acelerada por hardware */
         @keyframes gradientTransform {
             0% { transform: translate(-10%, -10%); }
             100% { transform: translate(10%, 10%); }
@@ -55,7 +53,7 @@
             inset: 0;
             z-index: 200;
             background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px); /* Blur optimizado */
+            backdrop-filter: blur(8px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -182,8 +180,8 @@
             justify-content: center;
             font-weight: 900;
             color: white;
-            transform-origin: center center; /* Optimizado para escala central */
-            will-change: transform; /* Informa a la GPU que esta capa se animará */
+            transform-origin: center center;
+            will-change: transform;
         }
 
         .floating-action { position: fixed; z-index: 100; }
@@ -219,9 +217,9 @@
         @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .modal-overlay {
-            background: rgba(0, 0, 0, 0.85); /* Un poco más oscuro */
-            backdrop-filter: blur(8px); /* Reducido de 20px a 8px para mejor rendimiento */
-            transition: opacity 0.5s ease, visibility 0.5s ease; /* Más rápido */
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(8px); 
+            transition: opacity 0.5s ease, visibility 0.5s ease;
             opacity: 0;
             visibility: hidden;
             display: flex;
@@ -451,97 +449,115 @@
     </script>
 
     <script>
+        // BASE DE DATOS DE PREGUNTAS: BIG DATA Y ANALÍTICA PARA COMUNICADORES (90 preguntas)
         const questionsDB = [
-            { topic: "Embudo de Ventas", q: "¿Qué es un Embudo de Ventas o Funnel Marketing?", a: "Es una representación visual del proceso de compra del cliente.", options: ["Una estrategia de descuentos en tiendas.", "Una representación visual del proceso de compra del cliente.", "Un software para enviar correos masivos."], correct: 1 },
-            { topic: "Embudo de Ventas", q: "¿Por qué se llama 'embudo' este proceso?", a: "Porque los prospectos se van reduciendo al avanzar las etapas.", options: ["Porque los prospectos se van reduciendo al avanzar las etapas.", "Porque los precios caen como en un embudo.", "Porque atrae a todos los usuarios sin filtros."], correct: 0 },
-            { topic: "Embudo de Ventas", q: "¿Cuáles son las 4 etapas del embudo vistas en clase?", a: "Conciencia, Interés, Decisión, Acción.", options: ["Conciencia, Interés, Decisión, Acción.", "Atracción, Visita, Compra, Salida.", "Investigación, Análisis, Estrategia, Venta."], correct: 0 },
-            { topic: "Embudo de Ventas", q: "¿Para qué sirve medir resultados en el embudo?", a: "Para analizar métricas clave y evaluar el rendimiento.", options: ["Para cambiar la sede de la empresa.", "Para subir los precios al máximo.", "Para analizar métricas clave y evaluar el rendimiento."], correct: 2 },
-            { topic: "Embudo de Ventas", q: "¿Cuál es la primera etapa donde entran muchos prospectos?", a: "Conciencia.", options: ["Acción.", "Conciencia.", "Decisión."], correct: 1 },
-            { topic: "Embudo de Ventas", q: "Optimizar el proceso de ventas nos permite...", a: "Identificar y mejorar las etapas de conversión.", options: ["Ocultar los defectos del producto.", "Identificar y mejorar las etapas de conversión.", "Despedir a los vendedores."], correct: 1 },
-            { topic: "Embudo de Ventas", q: "¿Qué se busca en la etapa de 'Acción' del embudo?", a: "Lograr mayores ventas y conversiones.", options: ["Lograr mayores ventas y conversiones.", "Que el usuario apenas conozca la marca.", "Analizar a la competencia."], correct: 0 },
-            { topic: "Business Intelligence", q: "¿A qué se refiere el Business Intelligence (BI)?", a: "Procesos para analizar datos y convertirlos en información estratégica.", options: ["Contratar líderes inteligentes.", "Procesos para analizar datos y convertirlos en información estratégica.", "Crear campañas creativas en redes."], correct: 1 },
-            { topic: "Business Intelligence", q: "En la jerarquía de BI, ¿cuál es el nivel más bajo (la base)?", a: "Datos de Negocio.", options: ["Toma de Decisiones.", "Información Estratégica.", "Datos de Negocio."], correct: 2 },
-            { topic: "Business Intelligence", q: "¿Qué sigue en la jerarquía de BI después de los Datos de Negocio?", a: "Análisis de Datos.", options: ["Toma de Decisiones.", "Análisis de Datos.", "Información Estratégica."], correct: 1 },
-            { topic: "Business Intelligence", q: "¿Cuál es la cima de la jerarquía del Business Intelligence?", a: "Toma de Decisiones.", options: ["Toma de Decisiones.", "Datos de Negocio.", "Análisis de Datos."], correct: 0 },
-            { topic: "Business Intelligence", q: "¿Qué herramienta de BI fue desarrollada por Microsoft?", a: "Power BI.", options: ["Tableau.", "Power BI.", "Zoho Analytics."], correct: 1 },
-            { topic: "Business Intelligence", q: "¿Qué herramienta de BI está basada en la nube para conectar datos?", a: "Domo.", options: ["Domo.", "Qlik Sense.", "Looker Studio."], correct: 0 },
-            { topic: "Business Intelligence", q: "Herramienta que utiliza tecnología de 'asociación de datos':", a: "Qlik Sense.", options: ["Yellowfin BI.", "Sisense.", "Qlik Sense."], correct: 2 },
-            { topic: "Business Intelligence", q: "Tableau se destaca como una herramienta para...", a: "Explorar y visualizar datos.", options: ["Explorar y visualizar datos.", "Diseñar piezas gráficas.", "Enviar correos masivos."], correct: 0 },
-            { topic: "Business Intelligence", q: "¿Qué beneficio del BI mejora la eficiencia detectando problemas antes de que escalen?", a: "Detección temprana de problemas.", options: ["Identificación de oportunidades.", "Reducción de tiempo en tareas.", "Detección temprana de problemas."], correct: 2 },
-            { topic: "Business Intelligence", q: "El BI aumenta la eficiencia al reducir el tiempo en...", a: "Tareas rutinarias.", options: ["El descanso del personal.", "Tareas rutinarias.", "Procesos creativos."], correct: 1 },
-            { topic: "Business Intelligence", q: "Gracias al BI, la toma de decisiones mejora al adaptar...", a: "Experiencias del cliente.", options: ["El horario de los empleados.", "Experiencias del cliente.", "Los colores del logotipo."], correct: 1 },
-            { topic: "Investigación", q: "¿Qué es la investigación descriptiva?", a: "Identificar y clasificar elementos de un fenómeno.", options: ["Identificar y clasificar elementos de un fenómeno.", "Crear hipótesis complejas.", "Experimentar con animales en laboratorio."], correct: 0 },
-            { topic: "Investigación", q: "La investigación descriptiva se enfoca en el...", a: "Qué (y no en el por qué).", options: ["Cuándo y Dónde.", "Por qué y para qué.", "Qué (y no en el por qué)."], correct: 2 },
-            { topic: "Investigación", q: "¿La investigación descriptiva usa métodos experimentales?", a: "No, utiliza métodos no experimentales sin manipular variables.", options: ["Sí, manipula todas las variables posibles.", "No, utiliza métodos no experimentales sin manipular variables.", "Solo cuando se hace en laboratorios."], correct: 1 },
-            { topic: "Investigación", q: "¿Cuál es el rol del investigador en este tipo de estudio?", a: "Observador neutral, sin influir en el fenómeno.", options: ["Debe influir directamente en el resultado.", "Observador neutral, sin influir en el fenómeno.", "Debe cambiar el comportamiento del usuario."], correct: 1 },
-            { topic: "Investigación", q: "¿En qué momento del tiempo se suele realizar la investigación descriptiva?", a: "En un momento específico (como una fotografía).", options: ["En un momento específico (como una fotografía).", "Solo en el futuro.", "Únicamente usando datos de hace 100 años."], correct: 0 },
-            { topic: "Investigación", q: "¿Qué tipo de resultados genera la investigación descriptiva?", a: "Cuantitativos y cualitativos.", options: ["Solo descripciones narrativas.", "Cuantitativos y cualitativos.", "Únicamente cifras exactas."], correct: 1 },
-            { topic: "Investigación", q: "¿Cómo es la capacidad de generalización de la investigación descriptiva?", a: "Limitada, porque no siempre usa muestras representativas.", options: ["Ilimitada, aplica para todo el mundo.", "Limitada, porque no siempre usa muestras representativas.", "Depende del presupuesto invertido."], correct: 1 },
-            { topic: "Investigación", q: "¿Para qué sirven los hallazgos de una investigación descriptiva?", a: "Como base para otras investigaciones más profundas.", options: ["Como base para otras investigaciones más profundas.", "Para detener cualquier estudio futuro.", "Para despedir empleados."], correct: 0 },
-            { topic: "Investigación", q: "En 1985, Coca-Cola cambió su fórmula debido a la competencia de...", a: "Pepsi.", options: ["Sprite.", "Fanta.", "Pepsi."], correct: 2 },
-            { topic: "Investigación", q: "¿Qué lección dejó el caso de Coca-Cola sobre la investigación?", a: "Hay que complementar encuestas con aspectos emocionales.", options: ["Nunca se debe cambiar una fórmula.", "Hay que complementar encuestas con aspectos emocionales.", "La investigación descriptiva no sirve de nada."], correct: 1 },
-            { topic: "Investigación", q: "En la rúbrica UAO vista en clase, los 'elementos visibles' a medir eran...", a: "Hombres y Mujeres.", options: ["Hombres y Mujeres.", "Estudiantes y Profesores.", "Jóvenes y Adultos mayores."], correct: 0 },
-            { topic: "Investigación", q: "La frecuencia de acciones en la rúbrica UAO consistía en medir:", a: "Ingreso / Egreso.", options: ["Ingreso / Egreso.", "Comprar / Vender.", "Lectura / Escritura."], correct: 0 },
-            { topic: "Investigación", q: "En el taller final, ¿cuántos comentarios de 'dolor de marca' deben buscar los grupos?", a: "Alrededor de 400 comentarios.", options: ["Alrededor de 50.", "Alrededor de 400 comentarios.", "Más de 1000."], correct: 1 },
-            { topic: "Investigación", q: "Después de categorizar 400 comentarios, se deben sacar...", a: "30 ideas principales.", options: ["10 ideas principales.", "30 ideas principales.", "5 insights finales."], correct: 1 },
-            { topic: "Investigación", q: "¿Qué es un 'Insight de dolor de marca'?", a: "La causa raíz detrás de las críticas de los usuarios.", options: ["El logotipo de la empresa.", "El eslogan más famoso.", "La causa raíz detrás de las críticas de los usuarios."], correct: 2 },
-            { topic: "Comunicación", q: "En la comunicación tradicional (Radio, TV), el receptor era...", a: "Pasivo.", options: ["Creativo.", "Pasivo.", "Participativo."], correct: 1 },
-            { topic: "Comunicación", q: "En la comunicación digital, el usuario es participativo y crea...", a: "UGC (User Generated Content).", options: ["Anuncios de TV.", "UGC (User Generated Content).", "Noticias en la prensa escrita."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Cuál es el objetivo principal del comunicador en el ecosistema digital?", a: "CONECTAR.", options: ["Vender más que nadie.", "CONECTAR.", "Diseñar logotipos."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Qué representa la letra 'C' inicial en C.O.N.E.C.T.A.?", a: "Contexto y Cliente (Audiencia).", options: ["Creatividad y Contenidos.", "Contexto y Cliente (Audiencia).", "Conciencia y Costos."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "En 'Contexto y Cliente', no se habla a 'jóvenes de 18 a 25', se habla a...", a: "Personas con miedos, deseos y lenguaje propio.", options: ["Clientes con tarjetas de crédito.", "Personas con miedos, deseos y lenguaje propio.", "Cuentas anónimas de internet."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Qué recomienda el Tip para entender a la audiencia?", a: "Investigar conversaciones en foros y comentarios (ej. Reddit).", options: ["Hacer solo encuestas pagas.", "Investigar conversaciones en foros y comentarios (ej. Reddit).", "Adivinar lo que quieren."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Qué representa la 'O' en C.O.N.E.C.T.A.?", a: "Objetivos (SMART).", options: ["Objetivos (SMART).", "Oportunidades de marca.", "Organización de tiempos."], correct: 0 },
-            { topic: "Modelo CONECTA", q: "Un objetivo sin número y sin fecha es solo un...", a: "Deseo.", options: ["Borrador.", "Deseo.", "Estrategia."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Qué representa la 'N' en C.O.N.E.C.T.A.?", a: "Narrativa y Tono.", options: ["Nuevos medios.", "Nicho de mercado.", "Narrativa y Tono."], correct: 2 },
-            { topic: "Modelo CONECTA", q: "¿Cuál es el ejemplo dado en clase sobre la narrativa de Dove?", a: "Su historia no es 'jabón', es 'belleza real'.", options: ["Su historia es 'higiene total'.", "Su historia no es 'jabón', es 'belleza real'.", "Su historia es 'somos los más baratos'."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "La mejor narrativa es una verdad de la organización contada de forma...", a: "Extraordinaria.", options: ["Común y corriente.", "Con noticias falsas.", "Extraordinaria."], correct: 2 },
-            { topic: "Modelo CONECTA", q: "¿Qué representa la 'E' en C.O.N.E.C.T.A.?", a: "Ecosistema y Canales.", options: ["Esfuerzo y Equipo.", "Ecosistema y Canales.", "Economía y Costos."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Es necesario que una marca esté en todas las redes sociales?", a: "No, solo donde la audiencia realmente escucha.", options: ["No, solo donde la audiencia realmente escucha.", "Sí, para ser famosa rápido.", "Sí, porque es gratis abrirlas."], correct: 0 },
-            { topic: "Modelo CONECTA", q: "¿Qué representa la segunda 'C' en C.O.N.E.C.T.A.?", a: "Contenidos (Pilares y Formatos).", options: ["Control de crisis.", "Contenidos (Pilares y Formatos).", "Correos y Clics."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Cuál es la regla de oro para crear contenidos de valor?", a: "80% aportar valor, 20% vender o pedir algo.", options: ["50% vender, 50% noticias.", "80% aportar valor, 20% vender o pedir algo.", "100% intentar vender el producto."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Qué representa la 'T' en C.O.N.E.C.T.A.?", a: "Tácticas y Temporalidad.", options: ["Tecnología y Tiempo.", "Tácticas y Temporalidad.", "Tráfico y Tendencias."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "Según el modelo, en la creación de contenido ¿qué cualidad derrota a la intensidad?", a: "La consistencia.", options: ["El presupuesto.", "El diseño gráfico.", "La consistencia."], correct: 2 },
-            { topic: "Modelo CONECTA", q: "¿Qué representa la 'A' final en C.O.N.E.C.T.A.?", a: "Analítica y Ajuste.", options: ["Agencias y Anuncios.", "Analítica y Ajuste.", "Arte y Animación."], correct: 1 },
-            { topic: "Modelo CONECTA", q: "¿Para qué se miran los datos en la Analítica Digital?", a: "Para aprender y pivotar, no solo para celebrar.", options: ["Solo para mostrarle al jefe.", "Para despedir al Community Manager.", "Para aprender y pivotar, no solo para celebrar."], correct: 2 },
-            { topic: "Arquetipos Jung", q: "Psicólogo que propuso los 12 Arquetipos de Marca utilizados en Marketing:", a: "Carl Jung.", options: ["Carl Jung.", "Sigmund Freud.", "Philip Kotler."], correct: 0 },
-            { topic: "Arquetipos Jung", q: "Arquetipo colaborativo que encarna las virtudes de la gente común:", a: "El Amigo.", options: ["El Cuidador.", "El Sabio.", "El Amigo."], correct: 2 },
-            { topic: "Arquetipos Jung", q: "Arquetipo inconformista que transforma ideas en productos únicos:", a: "El Creador.", options: ["El Creador.", "El Mago.", "El Hacedor."], correct: 0 },
-            { topic: "Arquetipos Jung", q: "Arquetipo que representa la aventura, la libertad y busca lo nuevo:", a: "El Explorador.", options: ["El Explorador.", "El Destructor.", "El Héroe."], correct: 0 },
-            { topic: "Arquetipos Jung", q: "Arquetipo motivado por la valentía, que inspira a superar desafíos:", a: "El Héroe.", options: ["El Amante.", "El Héroe.", "El Rebelde."], correct: 1 },
-            { topic: "Arquetipos Jung", q: "Arquetipo que desafía convenciones y lucha contra la opresión:", a: "El Rebelde.", options: ["El Sabio.", "El Bromista.", "El Rebelde."], correct: 2 },
-            { topic: "Arquetipos Jung", q: "Arquetipo que busca la verdad para iluminar a otros con su conocimiento:", a: "El Sabio.", options: ["El Sabio.", "El Amigo.", "El Mago."], correct: 0 },
-            { topic: "Arquetipos Jung", q: "Arquetipo que inspira conexión emocional, sensualidad y pasión:", a: "El Amante.", options: ["El Amante.", "El Bromista.", "El Cuidador."], correct: 0 },
-            { topic: "Arquetipos Jung", q: "Arquetipo centrado en el servicio, la empatía y la generosidad:", a: "El Cuidador.", options: ["El Cuidador.", "El Hacedor.", "El Creador."], correct: 0 },
-            { topic: "Arquetipos Jung", q: "Arquetipo orientado a la acción, valora la eficiencia al hacer realidades:", a: "El Hacedor.", options: ["El Mago.", "El Hacedor.", "El Destructor."], correct: 1 },
-            { topic: "Arquetipos Jung", q: "Arquetipo que busca la diversión, la ligereza y el humor en la vida:", a: "El Bromista.", options: ["El Amigo.", "El Bromista.", "El Explorador."], correct: 1 },
-            { topic: "Arquetipos Jung", q: "Arquetipo que cuestiona el status quo mediante la disrupción total:", a: "El Destructor.", options: ["El Destructor.", "El Rebelde.", "El Héroe."], correct: 0 },
-            { topic: "Arquetipos Jung", q: "Arquetipo maestro del conocimiento que usa la 'magia' para cambiar cosas:", a: "El Mago.", options: ["El Sabio.", "El Creador.", "El Mago."], correct: 2 },
-            { topic: "Inteligencia Artificial", q: "¿Qué es la Inteligencia Artificial (IA)?", a: "Tecnología que realiza tareas que normalmente requieren inteligencia humana.", options: ["Robots físicos que dominan el mundo.", "Tecnología que realiza tareas que normalmente requieren inteligencia humana.", "Un virus informático muy avanzado."], correct: 1 },
-            { topic: "Inteligencia Artificial", q: "¿Qué país organizó el Foro Global sobre la Ética de la IA en 2024?", a: "Eslovenia.", options: ["Estados Unidos.", "Japón.", "Eslovenia."], correct: 2 },
-            { topic: "Inteligencia Artificial", q: "¿Cuál es el documento de Política Pública de Colombia sobre IA a 2030?", a: "El CONPES.", options: ["El Tratado Libre de Comercio.", "La Ley de Protección de Datos.", "El CONPES."], correct: 2 },
-            { topic: "Inteligencia Artificial", q: "¿En el foro de la UNESCO se lanzó un Observatorio Global en alianza con?", a: "El Instituto Alan Turing y la ITU.", options: ["Meta y OpenAI.", "El Instituto Alan Turing y la ITU.", "La NASA."], correct: 1 },
-            { topic: "Inteligencia Artificial", q: "¿Para qué sirve el Readiness Assessment Methodology (RAM) de la UNESCO?", a: "Para evaluar reformas legales y sociales sobre IA en países.", options: ["Para medir la velocidad del internet.", "Para evaluar reformas legales y sociales sobre IA en países.", "Para saber cuántos robots tiene un país."], correct: 1 },
-            { topic: "Inteligencia Artificial", q: "¿Cuál es el objetivo principal de la Política Pública de IA en Colombia?", a: "Generar capacidades para desarrollo ético e impulsar la economía.", options: ["Generar capacidades para desarrollo ético e impulsar la economía.", "Prohibir el uso de ChatGPT en colegios.", "Crear una criptomoneda nacional."], correct: 0 },
-            { topic: "Herramientas IA", q: "¿Qué chatbot de IA fue desarrollado por la empresa OpenAI?", a: "ChatGPT.", options: ["Copilot.", "Gemini.", "ChatGPT."], correct: 2 },
-            { topic: "Herramientas IA", q: "¿Qué chatbot está integrado en herramientas de Office y fue creado por Microsoft?", a: "Copilot.", options: ["Claude.", "Copilot.", "LeChat."], correct: 1 },
-            { topic: "Herramientas IA", q: "Chatbot creado por Google, caracterizado por ser multimodal:", a: "Gemini.", options: ["Gemini.", "DeepSeek.", "Grok."], correct: 0 },
-            { topic: "Herramientas IA", q: "Chatbot de la empresa Anthropic, enfocado en seguridad y ética:", a: "Claude.", options: ["ChatGPT.", "Claude.", "Qwen."], correct: 1 },
-            { topic: "Herramientas IA", q: "¿Qué chatbot chino es conocido por ser potente en código y rentable?", a: "DeepSeek.", options: ["Qwen.", "LeChat.", "DeepSeek."], correct: 2 },
-            { topic: "Herramientas IA", q: "Chatbot de xAI inspirado en un enfoque rebelde, directo y crítico:", a: "Grok.", options: ["Grok.", "ChatGPT.", "Copilot."], correct: 0 },
-            { topic: "Herramientas IA", q: "Directorio web con más de 1450 opciones de IA categorizadas:", a: "Evolupedia.", options: ["Google.", "Wikipedia.", "Evolupedia."], correct: 2 },
-            { topic: "Herramientas IA", q: "Canal de YouTube recomendado que explica la IA de forma práctica y accesible:", a: "Dot CSV.", options: ["Dot CSV.", "Luisito Comunica.", "El Rubius."], correct: 0 },
-            { topic: "Prompts IA", q: "¿Qué es un Prompt en Inteligencia Artificial?", a: "Instrucción dada a la IA para que genere contenido.", options: ["Instrucción dada a la IA para que genere contenido.", "El botón de apagado del sistema.", "Un virus informático indetectable."], correct: 0 },
-            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Rol'?", a: "Quién es la IA en ese momento (ej. 'Eres un experto en...').", options: ["El idioma del texto.", "Quién es la IA en ese momento (ej. 'Eres un experto en...').", "El número de palabras a escribir."], correct: 1 },
-            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Tarea'?", a: "Qué tiene que hacer específicamente la IA.", options: ["A quién va dirigido el mensaje.", "El formato del archivo final.", "Qué tiene que hacer específicamente la IA."], correct: 2 },
-            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Público'?", a: "Para quién va dirigido el texto o respuesta.", options: ["Quién escribe el prompt.", "Para quién va dirigido el texto o respuesta.", "El canal de YouTube donde se publicará."], correct: 1 },
-            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Tono'?", a: "Cómo debe sonar la respuesta (ej. entusiasta, formal).", options: ["Cómo debe sonar la respuesta (ej. entusiasta, formal).", "El volumen de la voz en un video.", "El color de la página web."], correct: 0 },
-            { topic: "Prompts IA", q: "En un buen prompt, ¿qué indica el elemento 'Formato'?", a: "Cómo debe presentarse la respuesta (ej. tabla, párrafo).", options: ["La fecha de entrega del trabajo.", "Cómo debe presentarse la respuesta (ej. tabla, párrafo).", "Si es gratis o de pago."], correct: 1 },
-            { topic: "Social Listening", q: "¿Qué es el Social Listening?", a: "Monitorizar y analizar menciones sobre una marca en canales digitales.", options: ["Escuchar música en Spotify con amigos.", "Monitorizar y analizar menciones sobre una marca en canales digitales.", "Crear anuncios en la radio."], correct: 1 },
-            { topic: "Social Listening", q: "Fase del Social Listening donde se recopila información en redes o blogs:", a: "Monitorización.", options: ["Decisiones.", "Monitorización.", "Análisis."], correct: 1 },
-            { topic: "Social Listening", q: "¿Cómo ayuda el Social Listening a la reputación de la marca?", a: "Permite responder rápidamente a críticas o comentarios negativos.", options: ["Genera seguidores falsos automáticamente.", "Censura los comentarios malos de la web.", "Permite responder rápidamente a críticas o comentarios negativos."], correct: 2 },
-            { topic: "Social Listening", q: "¿Qué herramienta es famosa por evaluar empresas según la voz del consumidor (reseñas)?", a: "Trustpilot.", options: ["Microsoft Word.", "Trustpilot.", "Google Maps."], correct: 1 },
-            { topic: "Social Listening", q: "¿Cuál de las siguientes es una herramienta de Social Listening mencionada en clase?", a: "Brand24.", options: ["Netflix.", "Brand24.", "Canva."], correct: 1 }
+            // Bloque 1 · Presentación del curso
+            { topic: "Presentación del curso", q: "¿Cuántos créditos tiene el curso Big Data y Analítica para Comunicadores?", options: ["2 créditos", "3 créditos", "4 créditos"], correct: 1 },
+            { topic: "Presentación del curso", q: "¿Cuál es el código del curso?", options: ["315261", "316251", "315162"], correct: 0 },
+            { topic: "Presentación del curso", q: "¿Qué universidad dicta el curso?", options: ["Universidad del Valle", "Universidad ICESI", "Universidad Autónoma de Occidente"], correct: 2 },
+            { topic: "Presentación del curso", q: "En la era digital, ¿cuál es el activo más estratégico según la presentación?", options: ["Las redes sociales", "Los datos", "La publicidad"], correct: 1 },
+            { topic: "Presentación del curso", q: "Según la presentación, los datos sin contexto son:", options: ["Conocimiento", "Valor", "Ruido"], correct: 2 },
+            { topic: "Presentación del curso", q: "El objetivo principal del curso es conceptualizar estrategias digitales fundamentadas en:", options: ["IA y Big Data", "Diseño gráfico y fotografía", "Periodismo impreso y radio"], correct: 0 },
+            { topic: "Presentación del curso", q: "¿Cuáles son los tres pasos del objetivo principal del curso?", options: ["Observar, copiar, publicar", "Investigar, proponer, crear con IA", "Grabar, editar, emitir"], correct: 1 },
+            { topic: "Presentación del curso", q: "¿Cuántas competencias clave desarrolla el curso?", options: ["3", "5", "4"], correct: 2 },
+            { topic: "Presentación del curso", q: "¿Qué competencia se centra en identificar insights y tendencias a partir de datos masivos?", options: ["Analítica", "Investigativa", "Tecnológica"], correct: 0 },
+            { topic: "Presentación del curso", q: "¿Qué competencia consiste en diseñar planes basados en datos para múltiples canales?", options: ["Tecnológica", "Estratégica", "Investigativa"], correct: 1 },
+            { topic: "Presentación del curso", q: "¿En qué semanas se desarrolla el Proyecto Final del roadmap de 16 semanas?", options: ["Semanas 9 a 11", "Semanas 3 a 5", "Semanas 12 a 16"], correct: 2 },
+            { topic: "Presentación del curso", q: "¿Qué hito de evaluación tiene el mayor porcentaje?", options: ["Investigación e Insights (15%)", "Presentación del Proyecto Final (35%)", "Contenidos Multicanal (25%)"], correct: 1 },
+
+            // Bloque 2 · Clase 1: Fundamentos
+            { topic: "Fundamentos Analíticos", q: "«Quien tiene los datos, tiene…»", options: ["la historia", "el poder", "el mercado"], correct: 0 },
+            { topic: "Fundamentos Analíticos", q: "¿Cuál es el rol del comunicador frente a los datos?", options: ["Ingeniero que programa algoritmos", "Técnico de bases de datos", "Estratega y contador de historias"], correct: 2 },
+            { topic: "Fundamentos Analíticos", q: "La comunicación Data-Driven consiste en pasar de la intuición ciega a:", options: ["La comunicación masiva", "La comunicación basada en evidencia", "La comunicación improvisada"], correct: 1 },
+            { topic: "Fundamentos Analíticos", q: "¿Qué es el Big Data?", options: ["Un software de diseño gráfico", "Una metodología de investigación cualitativa", "La recolección masiva de información digital que generamos cada segundo"], correct: 2 },
+            { topic: "Fundamentos Analíticos", q: "¿Qué es Business Intelligence (BI)?", options: ["Metodología y software que transforman datos en decisiones útiles", "Una red social empresarial", "Un tipo de servidor en la nube"], correct: 0 },
+            { topic: "Fundamentos Analíticos", q: "En el proceso de la analítica, los dashboards o paneles claros corresponden a la etapa de:", options: ["Almacenamiento", "Organización", "Visualización"], correct: 2 },
+            { topic: "Fundamentos Analíticos", q: "¿Qué hace el Data Journalism?", options: ["Analiza bases de datos públicas para destapar historias o mapear tendencias", "Envía campañas a la hora exacta de apertura", "Redacta el boletín corporativo"], correct: 0 },
+            { topic: "Fundamentos Analíticos", q: "¿Cuáles son las 5 V's del Big Data?", options: ["Volumen, Visibilidad, Variedad, Veracidad, Viralidad", "Volumen, Velocidad, Variedad, Veracidad, Valor", "Volumen, Velocidad, Validación, Variación, Valor"], correct: 1 },
+            { topic: "Fundamentos Analíticos", q: "En la analogía de «la casa de los datos», ¿qué representa el Volumen?", options: ["La presión del grifo", "El tamaño del tanque de agua", "El tipo de agua (fría, caliente, hielo)"], correct: 1 },
+            { topic: "Fundamentos Analíticos", q: "En esa misma analogía, la Veracidad equivale a:", options: ["Preguntar si el agua es potable y limpia", "Medir la presión del grifo", "Preparar un buen café"], correct: 0 },
+            { topic: "Fundamentos Analíticos", q: "En la analogía, el Valor equivale a:", options: ["La presión del grifo", "El tamaño del tanque", "Tu habilidad para preparar un gran café con el agua"], correct: 2 },
+            { topic: "Fundamentos Analíticos", q: "¿Qué datos analizó Microsoft Workplace Analytics para rediseñar sus oficinas?", options: ["Los calendarios de sus ingenieros", "Las compras de sus clientes", "Encuestas de redes sociales"], correct: 0 },
+            { topic: "Fundamentos Analíticos", q: "En el reto «Cazadores de Insights», ¿cuál es tu papel?", options: ["Programador de software", "Traductor entre el software y la audiencia", "Auditor financiero"], correct: 1 },
+            { topic: "Fundamentos Analíticos", q: "En la tarea de Auditoría Manual, ¿cuántos de los últimos posts de una marca local debes revisar?", options: ["5 posts", "15 posts", "30 posts"], correct: 1 },
+
+            // Bloque 3 · Semana 3: Investigación descriptiva
+            { topic: "Investigación Descriptiva", q: "¿Cuál es la «regla de oro» de la investigación descriptiva?", options: ["No busca causas ni pregunta el «por qué»", "Siempre explica las causas del fenómeno", "Predice el comportamiento futuro"], correct: 0 },
+            { topic: "Investigación Descriptiva", q: "Describir es como tomar:", options: ["Un video de larga duración", "Una fotografía instantánea, nítida y detallada", "Un mapa de ruta"], correct: 1 },
+            { topic: "Investigación Descriptiva", q: "La observación estructurada registra patrones usando:", options: ["Una entrevista abierta", "Un diario libre", "Una lista de cotejo prediseñada"], correct: 2 },
+            { topic: "Investigación Descriptiva", q: "Las categorías de observación sistemática deben ser:", options: ["Mutuamente excluyentes", "Ambiguas y flexibles", "Solo cualitativas"], correct: 0 },
+            { topic: "Investigación Descriptiva", q: "¿Cómo se evita el Efecto Hawthorne?", options: ["Interactuando con las personas observadas", "No alterando el entorno natural", "Avisando a todos que se les observa"], correct: 1 },
+            { topic: "Investigación Descriptiva", q: "¿Cuál es un ejemplo de observación fáctica, sin juicios de valor?", options: ["«Los estudiantes se veían cansados»", "«La clase era aburrida»", "«Se registraron 12 bostezos en 15 minutos»"], correct: 2 },
+            { topic: "Investigación Descriptiva", q: "En la misión «El Campus como Laboratorio», ¿cuánto tiempo mínimo se observa?", options: ["1 hora cada día durante una semana", "10 minutos una sola vez", "1 día completo"], correct: 0 },
+            { topic: "Investigación Descriptiva", q: "¿Qué es la moda en la tabulación grupal?", options: ["El promedio de los datos", "El comportamiento empírico más recurrente", "El dato menos frecuente"], correct: 1 },
+
+            // Bloque 4 · Semana 4: Ecosistema de comunicación digital
+            { topic: "Ecosistema Digital", q: "¿Qué caracteriza a un mensaje digital (WhatsApp) frente al «teléfono roto»?", options: ["Llega instantáneo, intacto, multimodal y con trazabilidad", "Llega desfigurado e incompleto", "No deja ningún rastro"], correct: 0 },
+            { topic: "Ecosistema Digital", q: "¿Cómo define la presentación la comunicación digital?", options: ["Publicar contenido en redes sociales", "Creación, distribución e interacción algorítmica de mensajes binarios en red", "Uso de computadores en la oficina"], correct: 1 },
+            { topic: "Ecosistema Digital", q: "En comunicación digital, la digitalización (codificación binaria) significa:", options: ["Distribuir paquetes por la red", "Registrar la interacción del usuario", "Convertir todo en código legible por computadoras"], correct: 2 },
+            { topic: "Ecosistema Digital", q: "¿Quién es el prosumidor?", options: ["Un emisor pasivo", "Un receptor activo que responde, modifica y co-crea", "Un algoritmo de recomendación"], correct: 1 },
+            { topic: "Ecosistema Digital", q: "En el modelo redefinido, el emisor socio-técnico es:", options: ["Solo el humano", "Solo la plataforma", "Humano + algoritmo"], correct: 2 },
+            { topic: "Ecosistema Digital", q: "La Web 2.0 (2004) se asocia con:", options: ["La lectura estática de la telaraña (WWW)", "El despertar del prosumidor (blogs, wikis, redes)", "Las primeras redes ARPANET"], correct: 1 },
+            { topic: "Ecosistema Digital", q: "¿Cuál de estas es una propiedad técnica de la comunicación digital?", options: ["Interactividad", "Escalabilidad", "Bidireccionalidad"], correct: 1 },
+            { topic: "Ecosistema Digital", q: "¿Qué dos elementos son el núcleo estratégico de la analítica moderna?", options: ["Segmentación y trazabilidad", "Velocidad y permanencia", "Alcance global y personalización"], correct: 0 },
+            { topic: "Ecosistema Digital", q: "En la matriz «Luces y Sombras», ¿cuál es una sombra?", options: ["Eficiencia y bajos costos de distribución", "Alcance global", "Brecha digital, desinformación y burbujas de filtro"], correct: 2 },
+            { topic: "Ecosistema Digital", q: "¿Cuántas fases tiene la metodología de implementación del Hackatón Express?", options: ["9", "5", "7"], correct: 0 },
+            { topic: "Ecosistema Digital", q: "En el Lienzo de Estrategia Digital, las métricas de éxito deben ser:", options: ["Supuestos generales", "KPIs numéricos directos", "Opiniones del equipo"], correct: 1 },
+
+            // Bloque 5 · Semana 6: Del dato al insight
+            { topic: "Del Dato al Insight", q: "¿Cuál es el reto central del taller «Del dato al insight»?", options: ["Convertir cientos de quejas en un único y poderoso dolor de marca", "Redactar un boletín corporativo", "Programar un algoritmo"], correct: 0 },
+            { topic: "Del Dato al Insight", q: "El primer paso, «Escuchar», busca:", options: ["Redactar el informe final", "Diseñar la campaña", "Encontrar la fricción"], correct: 2 },
+            { topic: "Del Dato al Insight", q: "Las categorías de análisis de los comentarios:", options: ["Se inventan antes de ver los datos", "Nacen de los datos, por similitud", "Las define el docente"], correct: 1 },
+            { topic: "Del Dato al Insight", q: "En la etapa de ordenar por peso y frecuencia, una idea respaldada por 80 quejas:", options: ["Pesa menos que una de 5", "Pesa lo mismo que una de 5", "Pesa más que una respaldada por 5"], correct: 2 },
+            { topic: "Del Dato al Insight", q: "Un insight de dolor de marca es:", options: ["Comprender el por qué detrás del qué", "Repetir una categoría", "Una simple queja"], correct: 0 },
+            { topic: "Del Dato al Insight", q: "Para la exposición del taller se usará únicamente:", options: ["Canva", "La rúbrica como guía", "PowerPoint"], correct: 1 },
+            { topic: "Del Dato al Insight", q: "Según la presentación, el verdadero desafío en Big Data es:", options: ["Recolectar la mayor cantidad de datos", "Publicar más contenido", "Encontrar el patrón y entender el problema"], correct: 2 },
+
+            // Bloque 6 · Semana 7: Arquitectura de estrategias
+            { topic: "Estrategias", q: "¿Cuál es la diferencia entre estrategia y táctica?", options: ["La táctica define la visión; la estrategia ejecuta", "La estrategia dicta qué lograr; la táctica es cómo hacerlo", "Son exactamente lo mismo"], correct: 1 },
+            { topic: "Estrategias", q: "¿Quién es el autor del marco de planificación SOSTAC®?", options: ["PR Smith", "John Marston", "Gini Dietrich"], correct: 0 },
+            { topic: "Estrategias", q: "El ciclo RACE de John Marston corresponde a:", options: ["Registro, Alcance, Conversión, Engagement", "Reacción, Análisis, Contenido, Escucha", "Research, Action, Communication, Evaluation"], correct: 2 },
+            { topic: "Estrategias", q: "¿Qué significa el modelo PESO de Gini Dietrich?", options: ["Productos, Eventos, Servicios, Ofertas", "Medios Pagados, Obtenidos, Compartidos y Propios", "Planeación, Estrategia, Seguimiento, Optimización"], correct: 1 },
+            { topic: "Estrategias", q: "¿Cuál es un ejemplo de medio propio (Owned)?", options: ["Sitio web, blog o emails", "Anuncios y patrocinios", "Prensa y RP digitales"], correct: 0 },
+            { topic: "Estrategias", q: "¿Qué prohíbe el Marco AMEC?", options: ["Medir outcomes", "Definir objetivos medibles", "El uso de AVEs y métricas ambiguas"], correct: 2 },
+            { topic: "Estrategias", q: "¿Qué diferencia a los Outputs de los Outcomes?", options: ["Los outputs son el impacto y los outcomes la producción", "Los outputs son la producción y los outcomes el impacto", "Son sinónimos"], correct: 1 },
+            { topic: "Estrategias", q: "¿Qué hizo Hotmail para lograr viralidad en Growth Hacking?", options: ["Añadió al final de cada correo la firma «Consigue tu email gratis en Hotmail»", "Regaló equipos a sus usuarios", "Hizo publicidad en televisión"], correct: 0 },
+            { topic: "Estrategias", q: "¿Cómo logró Dropbox su crecimiento viral?", options: ["Dio espacio extra solo a los usuarios nuevos", "Dio más almacenamiento a quien invitaba y al invitado", "Bajó el precio de sus planes"], correct: 1 },
+
+            // Bloque 7 · Semana 8: IA Agéntica
+            { topic: "Inteligencia Artificial", q: "¿Qué incluye un brief detallado para una IA?", options: ["Una orden vaga", "Solo palabras clave", "Contexto, rol, restricciones y formato"], correct: 2 },
+            { topic: "Inteligencia Artificial", q: "Según la presentación, la IA es:", options: ["Una mente que siente y piensa", "Un motor estadístico de probabilidades", "Una conciencia artificial"], correct: 1 },
+            { topic: "Inteligencia Artificial", q: "¿Qué tipo de IA existe hoy según la clasificación por capacidad?", options: ["ANI (estrecha)", "AGI (general)", "ASI (superinteligencia)"], correct: 0 },
+            { topic: "Inteligencia Artificial", q: "¿Qué significa el framework RTCFR?", options: ["Regla, Texto, Canal, Fuente, Resultado", "Rol, Tarea, Contexto, Restricciones, Formato", "Reto, Tema, Cliente, Fecha, Resumen"], correct: 1 },
+            { topic: "Inteligencia Artificial", q: "¿Qué distingue a un agente de IA de un chatbot?", options: ["Espera preguntas y responde en un solo turno", "Solo genera texto o código", "Es proactivo: persigue un objetivo, planifica, ejecuta, verifica e itera"], correct: 2 },
+            { topic: "Inteligencia Artificial", q: "¿Cuál es uno de los 4 pilares de la autonomía de un agente?", options: ["Memoria", "Publicidad", "Presupuesto"], correct: 0 },
+            { topic: "Inteligencia Artificial", q: "¿Qué plantea el modelo Human-in-the-Loop?", options: ["El humano hace el 90% y la IA el 10%", "La IA hace el trabajo pesado y el humano aprueba la acción final", "Solo la IA decide y ejecuta"], correct: 1 },
+            { topic: "Inteligencia Artificial", q: "¿Para qué se recomienda Perplexity Pro en el ecosistema del comunicador 2026?", options: ["Imágenes y editorial", "Orquestación autónoma", "Investigación y fact-checking"], correct: 2 },
+            { topic: "Inteligencia Artificial", q: "En el estudio de caso de julio de 2026, ¿cuántos agentes de IA atacaron a Hugging Face?", options: ["700", "70", "7.000"], correct: 0 },
+
+            // Bloque 8 · Semana 9: Ejercicios prácticos con IA
+            { topic: "Ejercicios IA", q: "¿Cómo se describe a la IA en la Semana 9?", options: ["Piloto automático del comunicador", "Copiloto del comunicador estratégico", "Reemplazo del comunicador"], correct: 1 },
+            { topic: "Ejercicios IA", q: "En el flujo con IA, la búsqueda de correlaciones a ciegas se reemplaza por:", options: ["Consultas en lenguaje natural", "Tareas manuales repetitivas", "Gráficos estáticos"], correct: 0 },
+            { topic: "Ejercicios IA", q: "En el flujo con IA, los gráficos estáticos básicos pasan a ser:", options: ["Hojas de cálculo manuales", "Tablas sin formato", "Visualización dinámica y predictiva"], correct: 2 },
+
+            // Bloque 9 · Semana 10: Social Listening
+            { topic: "Social Listening", q: "¿Qué porcentaje de tu audiencia no te está etiquetando, según la masterclass?", options: ["25%", "50%", "95%"], correct: 2 },
+            { topic: "Social Listening", q: "En la analogía del restaurante, Monitoring es:", options: ["El mesero", "El chef", "El dueño"], correct: 0 },
+            { topic: "Social Listening", q: "En esa misma analogía, Listening es:", options: ["El mesero", "El chef", "El cliente"], correct: 1 },
+            { topic: "Social Listening", q: "¿Qué mide el Share of Voice (SOV)?", options: ["El volumen de ventas de la marca", "El número de seguidores", "El porcentaje de la conversación del sector que acapara tu marca frente a la competencia"], correct: 2 },
+            { topic: "Social Listening", q: "¿Qué es el Net Sentiment Rate (NSR)?", options: ["El número total de menciones", "El balance entre emociones positivas y negativas", "La velocidad de crecimiento de seguidores"], correct: 1 },
+            { topic: "Social Listening", q: "¿Qué mide la Velocidad del Sentimiento?", options: ["Qué tan rápido se torna ácida o dulce una conversación masiva", "El número de ventas por hora", "La cantidad de hashtags usados"], correct: 0 },
+            { topic: "Social Listening", q: "La búsqueda booleana usa operadores lógicos como:", options: ["Emojis y hashtags", "AND, OR, NOT", "Solo mayúsculas"], correct: 1 },
+            { topic: "Social Listening", q: "En la analogía de la búsqueda booleana, ¿qué representa el colador de café?", options: ["Un servidor en la nube", "Una red social", "Un filtro que borra el ruido y deja pasar el insight"], correct: 2 },
+            { topic: "Social Listening", q: "¿Qué ofrece la herramienta YouScan?", options: ["Rastreo web básico y gratuito", "Reconocimiento visual de fotos y logos sin texto", "Conectores API para GitHub"], correct: 1 },
+            { topic: "Social Listening", q: "¿Qué herramienta enterprise ofrece más de 100M de fuentes de datos y queries históricas profundas?", options: ["Brandwatch", "Brand24", "Google Alerts"], correct: 0 },
+            { topic: "Social Listening", q: "¿Cuál fue el caso real de Alpina Colombia?", options: ["Una campaña de TV con famosos", "Un concurso de recetas", "Un tiktoker pidió un postre gigante y la marca creó y produjo el Alpitro"], correct: 2 },
+            { topic: "Social Listening", q: "¿Qué muestra Google Trends?", options: ["Ventas absolutas de una marca", "Un índice de interés relativo de búsqueda", "El número exacto de búsquedas"], correct: 1 },
+            { topic: "Social Listening", q: "¿Para qué sirve Google Alerts?", options: ["Medir el sentimiento en redes", "Mapear preguntas reales de usuarios", "Detectar nuevas coberturas y menciones en la web"], correct: 2 },
+            { topic: "Social Listening", q: "¿Qué hace Brand24?", options: ["Mide menciones, alcance e interacción, y clasifica el sentimiento", "Mide solo el interés de búsqueda", "Genera matrices de preguntas"], correct: 0 },
+            { topic: "Social Listening", q: "¿Qué genera Answer The Public?", options: ["Alertas de nuevas noticias", "Matrices de preguntas reales (qué, cómo, cuándo, por qué)", "Informes de ventas"], correct: 1 },
+            { topic: "Social Listening", q: "Según las Reglas de Oro, una marca con muchas menciones podría estar viviendo:", options: ["Un gran éxito comercial", "Una mejor posición que su competencia", "Una crisis reputacional o una polémica"], correct: 2 },
+            { topic: "Social Listening", q: "Según la «Equidad Analítica», para comparar dos marcas se debe usar:", options: ["Filtros distintos para cada marca", "Exactamente las mismas condiciones, filtros y periodos", "Periodos diferentes según la marca"], correct: 1 }
         ];
 
         const playerColors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#a855f7", "#ec4899", "#06b6d4", "#eab308", "#ffffff", "#6366f1"];
@@ -729,7 +745,7 @@
 
                 await this.updateModalContent(html);
                 this.toggleModal(true);
-                await sleep(2000); // Reducido ligeramente para mayor agilidad
+                await sleep(2000); 
                 this.toggleModal(false);
                 await sleep(400);
                 this.isMoving = false; 
@@ -897,8 +913,6 @@
                 const boardRect = board.getBoundingClientRect();
                 if (boardRect.width === 0) return; 
                 
-                // OPTIMIZACIÓN: Se removió por completo los costosos <filter> de blur SVG. 
-                // Usaremos trazos gruesos semitransparentes en CSS (mucho más rápido en la GPU).
                 let svgHTML = `
                 <svg width="100%" height="100%" style="position:absolute; top:0; left:0; overflow:visible;">
                     <defs>
@@ -967,7 +981,6 @@
 
                     const pathData = `M ${x1} ${y1} C ${cx1} ${cy1} ${cx2} ${cy2} ${x2} ${y2}`;
 
-                    // OPTIMIZACIÓN: Simulación del neón dibujando la sombra por detrás sin filtro gaussiano.
                     if (type === 'ladder') {
                         svgHTML += `<path d="${pathData}" fill="none" stroke="#22c55e" stroke-width="10" opacity="0.25" />`; 
                         svgHTML += `<path d="${pathData}" class="dash-anim-vector" fill="none" stroke="#4ade80" stroke-width="4" stroke-dasharray="15, 15" stroke-linecap="round" marker-end="url(#vector-target-green)" />`;
@@ -1001,7 +1014,6 @@
                         pawn.className = 'player-pawn';
                         pawn.style.backgroundColor = p.color;
                         pawn.innerText = p.id;
-                        // Eliminamos transition css directo para no estropear la API the animations de JS
                         pawn.style.transition = 'none'; 
                         document.body.appendChild(pawn);
                     }
@@ -1039,19 +1051,15 @@
                 pawn.style.transform = `none`;
             }
 
-            // OPTIMIZACIÓN CRÍTICA: Ahora los saltos se animan usando Transformaciones 3D en la GPU
-            // Ya NO se cambian el "top" y "left" en medio de la animación.
             async positionPawnWithJump(player, pawnHalf, offsetX = 0, offsetY = 0) {
                 const cell = document.getElementById(`cell-${player.pos}`);
                 if (!cell) return;
                 const rect = cell.getBoundingClientRect();
                 const pawn = document.getElementById(`pawn-${player.id}`);
                 
-                // Obtenemos la posición de inicio
                 const currentLeft = parseFloat(pawn.style.left);
                 const currentTop = parseFloat(pawn.style.top);
                 
-                // Calculamos a dónde debe llegar
                 const targetLeft = window.scrollX + rect.left + rect.width/2 - pawnHalf + offsetX;
                 const targetTop = window.scrollY + rect.top + rect.height/2 - pawnHalf + offsetY;
 
@@ -1061,27 +1069,23 @@
                     return;
                 }
 
-                // Aseguramos que la ficha parta de su sitio real sin CSS transitions interfiriendo
                 pawn.style.transition = 'none';
 
-                // Distancias a recorrer
                 const deltaX = targetLeft - currentLeft;
                 const deltaY = targetTop - currentTop;
-                const jumpHeight = -45; // Arco del salto
+                const jumpHeight = -45; 
 
-                // La magia de la fluidez: Animamos con "transform: translate", que no consume CPU
                 const animation = pawn.animate([
                     { transform: `translate(0px, 0px) scale(1)` },
                     { transform: `translate(${deltaX / 2}px, ${Math.min(0, deltaY) + jumpHeight}px) scale(1.25)` }, 
                     { transform: `translate(${deltaX}px, ${deltaY}px) scale(1)` }
                 ], {
-                    duration: 350, // Ligeramente más rápido
+                    duration: 350, 
                     easing: 'ease-in-out',
                 });
 
                 await animation.finished;
 
-                // Solo al final, consolidamos la nueva posición base en top/left
                 pawn.style.left = `${targetLeft}px`;
                 pawn.style.top = `${targetTop}px`;
                 pawn.style.transform = `none`;
@@ -1123,7 +1127,7 @@
                     dice.innerHTML = `<i class="fas ${icons[res-1]}"></i>`;
                     dice.classList.remove('dice-rolling');
                     this.askQuestion(res, Math.min(this.players[this.currentPlayerIdx].pos + res, 30));
-                }, 800); // Reducido el tiempo girando
+                }, 800); 
             }
 
             toggleModal(show) {
